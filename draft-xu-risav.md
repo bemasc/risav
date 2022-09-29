@@ -51,13 +51,13 @@ author:
         # code: 100095
         country: China
         email: guoyangfei@zgclab.edu.cn
-      - 
+      -
         name: Benjamin M. Schwartz
         #org:
         #city:
         #country:
         email: bemasc@google.com
-      - 
+      -
         name: Haiyang (Henry) Wang
         org: The University of Minnesota at Duluth
         city: Minnesota
@@ -125,7 +125,7 @@ Signature:
 
 # Overview
 
-The goal of this section is to provides the high level description of how RISAV works. RISAV is a cryptography-b  ased inter-AS source address validation method that guarantees security benefits at partial deployment. RISAV uses static-static ECDH 
+The goal of this section is to provides the high level description of how RISAV works. RISAV is a cryptography-b  ased inter-AS source address validation method that guarantees security benefits at partial deployment. RISAV uses static-static ECDH
 <!--
 RPKI to obtain the binding relationship between AS numbers and IP prefixes. It uses IKE to negotiate the IKE SA and IPsec SA for generating the tag presenting the integrity of the IP source address. And the IPsec Authentication Header (AH) would be used to carry the tag in communication.
 -->
@@ -143,8 +143,8 @@ A typical workflow of RISAV is shown in {{figure1}}.
 
 
 ~~~~~~~~~~~
-                            +--------------+                               
-                            |     IANA     |                               
+                            +--------------+
+                            |     IANA     |
                             +--------------+
                                    |--------------------------+
                                    V                          |
