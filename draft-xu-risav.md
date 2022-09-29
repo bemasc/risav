@@ -11,7 +11,7 @@ date: 2022-09-30
 # stand_alone: yes
 
 ipr: trust200902
-area: Security Area
+# area: Security Area
 wg: Network Working Group
 kw: Internet-Draft
 cat: info
