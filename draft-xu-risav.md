@@ -5,7 +5,7 @@
 title: 'An RPKI and IPsec-based AS-to-AS Approach for Source Address Validation'
 abbrev: RISAV
 
-docname: draft-xu-risav-01
+docname: draft-xu-risav-latest
 date: 2022-09-30
 
 # stand_alone: yes
