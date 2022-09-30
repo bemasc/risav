@@ -87,7 +87,7 @@ informative:
 
 --- abstract
 
-This document identifies a need for static-static ECDH, RPKI, and IPsec based AS-to-AS approach for detection and mitigation of inter-AS source address validation (RISAV). The RISAV aims to reusing existing protocols to provide a light-weight packet's tag and with the incremental deployability to significantly reduce the spoofed source address in the Internet.
+This document presents RISAV, a protocol for establishing and using IPsec security between Autonomous Systems (ASes) using the RPKI identity system. In this protocol, the originating AS adds authenticating information to each outgoing packet at its Border Routers (ASBRs), and the receiving AS verifies and strips this information at its ASBRs. Packets that fail validation are dropped by the ASBR. RISAV achieves Source Address Validation among all participating ASes.
 
 
 --- middle
