@@ -75,10 +75,12 @@ normative:
   RFC5635:
   RFC5905:
   RFC5996:
+  RFC6278:
   RFC6480:
   RFC7039:
   RFC8174:
   RFC8209:
+  RFC8247:
   RFC8704:
 
 informative:
@@ -96,7 +98,7 @@ This document identifies a need for static-static ECDH, RPKI, and IPsec based AS
 
 Source address spoofing has been identified years ago at {{RFC2827}}, and {{RFC5210}} has proposed an Source Address Validation Architecture (SAVA) to alleviate such concerns. SAVA classifies this solution into three layers: Access Network, Intra-AS, and Inter-AS. The Inter-AS concerns the SAV at the AS boundaries. It is more challenging for developing the inter-AS source address validation approach because different ASes run different policies in different ISPs independently. It requires the different ASes to collaborate to verify the source address. The inter-AS SAV is more effective than Access or Intra-AS due to its better cost-effectiveness. However, over years of effort, inter-AS source address validation deployment is still not optimistic. An important reason is the difficulty of balancing the clear security benefits of partial implementations with the scalability of large-scale deployments. uRPF {{RFC5635}} {{RFC8704}}, for example, is a routing-based schemes filter spoofing source address's traffic, which may result in a lack of security benefits due to the dynamic nature of routing or incomplete information caused by partial deployments.
 
-This document provides a static-static ECDH, RPKI and IPsec-based {{RFC4301}} inter-AS approach to source address validation (RISAV). RISAV is a cryptography-based SAV mechanism to reduce the spoofing source address. It combines static-static ECDH (Elliptic Curve Diffie–Hellman key Exchange), RPKI (Resource Public Key Infrastructure), and IPsec (IP Security). RPKI provides the reflection relationship between AS numbers (ASN) and IP prefixes. ECDH negotiates between two ASes with the Security Association (SA) which contains the algorithm, secret key generating material, and IPsec packet type, and so forth. IPsec is designed for secure the Internet at the IP layer. It introduces two protocols, one is AH (authentication header) {{RFC4302}} which provides authenticity of the whole packet, including the source address. The other is ESP (IP Encapsulating Security Payload) {{RFC4303}} which encrypts the whole packet's payload.
+This document provides a static-static ECDH {{RFC6278}}, RPKI {{RFC6480}} and IPsec-based {{RFC4301}} inter-AS approach to source address validation (RISAV). RISAV is a cryptography-based SAV mechanism to reduce the spoofing source address. It combines static-static ECDH (Elliptic Curve Diffie–Hellman key Exchange), RPKI (Resource Public Key Infrastructure), and IPsec (IP Security). RPKI provides the reflection relationship between AS numbers (ASN) and IP prefixes. ECDH negotiates between two ASes with the Security Association (SA) which contains the algorithm, secret key generating material, and IPsec packet type, and so forth. IPsec is designed for secure the Internet at the IP layer. It introduces two protocols, one is AH (authentication header) {{RFC4302}} which provides authenticity of the whole packet, including the source address. The other is ESP (IP Encapsulating Security Payload) {{RFC4303}} which encrypts the whole packet's payload.
 
 ## Requirements Language
 
@@ -125,9 +127,19 @@ Signature:
 
 # Overview
 
-The goal of this section is to provides the high level description of how RISAV works. RISAV is a cryptography-b  ased inter-AS source address validation method that guarantees security benefits at partial deployment. RISAV uses static-static ECDH
+The goal of this section is to provides the high level description of what RISAV is and how RISAV works. 
+
+## What RISAV Is
+
+RISAV is a cryptography-based inter-AS source address validation method that guarantees security benefits at partial deployment. RISAV adds a tag to a valid packet which has the legal source address. 
+
+## How RISAV Works
+
+RISAV uses static-static ECDH as an alternative of IKE {{RFC8247}} to negotiate the security association used in IPsec AH/ESP communications. RPKI obtains the binding relationship between AS numbers and IP prefixes. And the original IPsec AH/ESP header format are used in communication.
+
+
 <!--
-RPKI to obtain the binding relationship between AS numbers and IP prefixes. It uses IKE to negotiate the IKE SA and IPsec SA for generating the tag presenting the integrity of the IP source address. And the IPsec Authentication Header (AH) would be used to carry the tag in communication.
+ It uses IKE to negotiate the IKE SA and IPsec SA for generating the tag presenting the integrity of the IP source address. And the IPsec Authentication Header (AH) would be used to carry the tag in communication.
 -->
 1. RPKI process. The five Reginal Internet Registry (RIR) would be authorized by IANA. They use their root certificate to sign the Certificate Authority (CA) certificate of the Local Internet Registry (LIR). And after that LIR would use a CA certificate to authorize indirectly the Internet Service Provider (ISP) or directly the Autonomous System (AS). When they obtain their own CA certificate, the AS would sign an End Entity (EE) certificate with a Route Origin Authorisation (ROA) which is a cryptographically signed object that states which AS are authorized to originate a certain prefix. Such the reflection of ASN relationship with IP prefixes would be broadcast to the network.
 
