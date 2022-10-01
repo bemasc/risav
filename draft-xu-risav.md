@@ -68,6 +68,7 @@ author:
 normative:
   RFC2119:
   RFC2827:
+  RFC2986:
   RFC4301:
   RFC4302:
   RFC4303:
@@ -75,10 +76,12 @@ normative:
   RFC5635:
   RFC5905:
   RFC5996:
+  RFC6278:
   RFC6480:
   RFC7039:
   RFC8174:
   RFC8209:
+  RFC8247:
   RFC8704:
 
 informative:
@@ -96,7 +99,7 @@ This document presents RISAV, a protocol for establishing and using IPsec securi
 
 Source address spoofing has been identified years ago at {{RFC2827}}, and {{RFC5210}} has proposed an Source Address Validation Architecture (SAVA) to alleviate such concerns. SAVA classifies this solution into three layers: Access Network, Intra-AS, and Inter-AS. The Inter-AS concerns the SAV at the AS boundaries. It is more challenging for developing the inter-AS source address validation approach because different ASes run different policies in different ISPs independently. It requires the different ASes to collaborate to verify the source address. The inter-AS SAV is more effective than Access or Intra-AS due to its better cost-effectiveness. However, over years of effort, inter-AS source address validation deployment is still not optimistic. An important reason is the difficulty of balancing the clear security benefits of partial implementations with the scalability of large-scale deployments. uRPF {{RFC5635}} {{RFC8704}}, for example, is a routing-based schemes filter spoofing source address's traffic, which may result in a lack of security benefits due to the dynamic nature of routing or incomplete information caused by partial deployments.
 
-This document provides a static-static ECDH, RPKI and IPsec-based {{RFC4301}} inter-AS approach to source address validation (RISAV). RISAV is a cryptography-based SAV mechanism to reduce the spoofing source address. It combines static-static ECDH (Elliptic Curve Diffie–Hellman key Exchange), RPKI (Resource Public Key Infrastructure), and IPsec (IP Security). RPKI provides the reflection relationship between AS numbers (ASN) and IP prefixes. ECDH negotiates between two ASes with the Security Association (SA) which contains the algorithm, secret key generating material, and IPsec packet type, and so forth. IPsec is designed for secure the Internet at the IP layer. It introduces two protocols, one is AH (authentication header) {{RFC4302}} which provides authenticity of the whole packet, including the source address. The other is ESP (IP Encapsulating Security Payload) {{RFC4303}} which encrypts the whole packet's payload.
+This document provides a static-static ECDH {{RFC6278}}, RPKI {{RFC6480}} and IPsec-based {{RFC4301}} inter-AS approach to source address validation (RISAV). RISAV is a cryptography-based SAV mechanism to reduce the spoofing source address. It combines static-static ECDH (Elliptic Curve Diffie–Hellman key Exchange), RPKI (Resource Public Key Infrastructure), and IPsec (IP Security). RPKI provides the reflection relationship between AS numbers (ASN) and IP prefixes. ECDH negotiates between two ASes with the Security Association (SA) which contains the algorithm, secret key generating material, and IPsec packet type, and so forth. IPsec is designed for secure the Internet at the IP layer. It introduces two protocols, one is AH (authentication header) {{RFC4302}} which provides authenticity of the whole packet, including the source address. The other is ESP (IP Encapsulating Security Payload) {{RFC4303}} which encrypts the whole packet's payload.
 
 ## Requirements Language
 
@@ -125,22 +128,19 @@ Signature:
 
 # Overview
 
-The goal of this section is to provides the high level description of how RISAV works. RISAV is a cryptography-b  ased inter-AS source address validation method that guarantees security benefits at partial deployment. RISAV uses static-static ECDH
-<!--
-RPKI to obtain the binding relationship between AS numbers and IP prefixes. It uses IKE to negotiate the IKE SA and IPsec SA for generating the tag presenting the integrity of the IP source address. And the IPsec Authentication Header (AH) would be used to carry the tag in communication.
--->
-1. RPKI process. The five Reginal Internet Registry (RIR) would be authorized by IANA. They use their root certificate to sign the Certificate Authority (CA) certificate of the Local Internet Registry (LIR). And after that LIR would use a CA certificate to authorize indirectly the Internet Service Provider (ISP) or directly the Autonomous System (AS). When they obtain their own CA certificate, the AS would sign an End Entity (EE) certificate with a Route Origin Authorisation (ROA) which is a cryptographically signed object that states which AS are authorized to originate a certain prefix. Such the reflection of ASN relationship with IP prefixes would be broadcast to the network.
+The goal of this section is to provides the high level description of what RISAV is and how RISAV works.
 
-2. Sign ASBR EE certificate. This EE certificate is just like the BGPsec Router Certificate defined in {{RFC8209}}. The ASBR would need its own EE certificate for and only for generating and verifying the signature in the AH header directly or indirectly.
+## What RISAV Is
 
-3. IKE process. Before IPsec establishing, the SA must be reached an agreement. There are two ways to negotiate the SA. One is mutual config all the parameters and the other one is using IKE for dynamic negotiating these parameters. Currently used is IKE version 2 (IKEv2, for short using IKE below). Typically, IKE would produce IKE SA in the IKE_SA_INIT exchange and IPsec SA in the IKE_AUTH exchange. This will be done in an ACS.
+RISAV is a cryptographically-based inter-AS source address validation approach that guarantees security benefits at partial deployment. It aims to provide the IP datagram with a valid source address, with the capability of anti-spoofing, anti-replay, light-weight and efficient, and incremental deployment incentives. As a result, RISAV adds a tag to a packet at the source AS Border Router (ASBR) proving that the packet is with a valid source address, and it would verify and remove this tag at the destination ASBR. The tag will be encapsulated in the Integrity Check Value (ICV) field of IPsec AH/ESP.
 
-4. SA or tag delivery. When all negotiations are done, the IPsec is established. If the ACS is an ASBR actually, it would deliver SA to the other ASBR in this AS. Otherwise, it would deliver the tags generated by the state machine. This delivery will be processed in a secure channel just like using IPsec ESP.
+## How RISAV Works
 
-5. IPsec AH communication. It uses IPsec AH for authentication of the IP source address.  IPsec is often used in tunnel mode as the IPsec VPN. Here, It expands the gateway to the AS border router (ASBR). When two ends x and y in AS X and Y respectively are communicating, the packet from x arriving at its ASBR RA would use the established IPsec channel for adding the representative tag. After the packet arrives at ASBR RB of AS Y, it would be inspected by comparing the consistency of the tag. The tag will be encapsulated in the ICV field in AH.
+RISAV uses static-static ECDH as an alternative of IKE {{RFC8247}} to negotiate the security association (SA) used in IPsec AH/ESP communications. Otherwise, it MUST follow strictly the standard IKE process to negotiate IKE SA and IPsec SA. RPKI obtains the binding relationship between AS numbers and IP prefixes, and it will synchronize the public key generated by ECDH and other messages including the contact IP to all peers. And the original IPsec AH/ESP header format is used in communication to carry this tag. The transport mode of IPsec AH is applied in general.
+
+Before deploying RISAV, each AS sets a contact IP representative. When negotiating or consulting with one AS, the peer MUST first communicate with this contact IP. This contact IP should contain at least and at most two IPs: one is IPv4 and the other is IPv6. In short, these are referred to as contact IP below.
 
 A typical workflow of RISAV is shown in {{figure1}}.
-
 
 ~~~~~~~~~~~
                             +--------------+
@@ -151,29 +151,44 @@ A typical workflow of RISAV is shown in {{figure1}}.
                             +--------------+                  |
                             |      RIR     |                  |
                             +--------------+                  |
-                           /                \-----------------+-1. signed CA
-                          V                  V                |  certificate
+                           /                \-----------------+-1. Signing CA
+                          V                  V                |  Certificate
               +--------------+               +--------------+ |
               |     LIR1     |               |     LIR2     | |
               +--------------+               +--------------+ |
               /                                             \-+
-             V   +------ 2. signed EE certificate -------+   V
+             V   +------ 3. Signing EE Certificate ------+   V
 +--------------+ |                                       | +--------------+
-|              | |    --------------------------------   | |              |
-|              | |          3. IKE negotiation           | |              |
+| 2. ECDH Key  | |                                       | | 2. ECDH Key  |
+|   Exchange   | |    --------------------------------   | |   Exchange   |
+|              | |    4. RPKI and Info Syncrhonization   | |              |
 |     AS A     | |    --------------------------------   | |     AS B     |
-|              | V                                       V |              |
+| contact IP a | V                                       V | contact IP b |
 |           ########  --------------------------------  ########          |
-|           # ASBR #           4. SA Deliver            # ASBR #          |
+|           # ASBR #   5. SA Negotiation and Delivery   # ASBR #          |
 |           ########  --------------------------------  ########          |
 |              |                                           |   Prefix Y   |
 |   Prefix X   |      +++++++++++++++++++++++++++++++++    | Public Key B |
-| Public Key A |           5. data transmission            |              |
-|              |              using IPsec AH               |              |
+| Public Key A |           6. Data Transmission            |              |
+|              |             with IPsec AH/ESP             |              |
 |              |      +++++++++++++++++++++++++++++++++    |              |
 +--------------+                                           +--------------+
 ~~~~~~~~~~~
 {: #figure1 title="RISAV workflow example."}
+
+1. RPKI process. The five Reginal Internet Registry (RIR) would be authorized by IANA. They use their root certificate to sign the Certificate Authority (CA) certificate of the Local Internet Registry (LIR). And after that LIR would use a CA certificate to authorize indirectly the Internet Service Provider (ISP) or directly the Autonomous System (AS). When they obtain their own CA certificate, the AS would sign an End Entity (EE) certificate with a Route Origin Authorisation (ROA) which is a cryptographically signed object that states which AS are authorized to originate a certain prefix. Such the reflection of the ASN relationship with IP prefixes would be broadcast to the network. This is the prerequisite.
+
+2. ECDH key exchange. The two deployed ASes MUST carry out the ECDH procedure to exchange public key and store the secretly private key with each contact IP. Then the AS encapsulates its public key in PKCS#10 syntax {{RFC2986}} to request a CA certificate with its contact IP. The contact IP will also be reserved at the relative CA certificate issued to one AS. After this exchange process, the AS pair negotiate immediately the algorithm, the IPsec header type, the session key and other fields at the Security Association Database (SAD).
+
+3. ASBR EE certificate signing. The ASBR would need its own EE certificate for and only for generating and verifying the ICV field in the AH/ESP header. This EE certificate is REQUIRED like the BGPsec Router Certificate defined in {{RFC8209}}. But the key used in generating the ICV value is not directly using this ECDH key pair. The key will be generated at the step 4 next. Since the ASBR is the main entity that processes the tag in the packet, it MUST be clear that all ASBRs of the same AS at the same time should apply the same key to calculate the ICV value. Thus, this will eliminate the multipath problems, which will be discussed in {{MPProblem}}.
+
+4. RPKI and information synchronization. The ROA synchronization would take place after the RPKI is deployed as step 1 describes. Here it will synchronize the contact IP in the RPKI database. That means the contact IP should be an exposed-available, high-performance IP address. After syncrhonization, the ASBR would get the IP address of the contact IP. The ASBR also requires that the synchronization includes the session key and other things negotiated at the step 2 used in the IPsec communication.
+
+5. SA negotiation and delivery. This is an OPTIONAL operation only if the AS doesn't support static-static ECDH. Before IPsec is established, the SA must be reached an agreement. There are two ways to negotiate the SA in traditional IPsec. One is manually config all the parameters and the other one is using IKE for dynamic negotiating these parameters. Currently used is IKE version 2 (IKEv2, for short using IKE below). Typically, IKE would produce IKE SA in the IKE_SA_INIT exchange and IPsec SA in the IKE_AUTH exchange. This will be done at the entity that owns and uses the contact IP, i.e. IKE node should be the node with the contact IP. When all negotiations are done, the IPsec is established.
+
+6. IPsec communication. It uses IPsec AH for authentication of the IP source address by default. IPsec is often used in tunnel mode as the IPsec VPN. Here, It expands the gateway to the ASBR. When two ends x and y in AS A and B respectively are communicating, the packet from x arriving at its ASBR RA would use the established IPsec channel for adding the representative tag which is generated with the negotiated and synchronized algorithm, session key, IPsec type, and other items and is filled in the ICV field. After the packet arrives at ASBR RB of AS B, it would be inspected by comparing the consistency of the tag at the packet's ICV field and the tag generated in the same way at the source ASBR.
+
+
 
 # Control Plane
 
@@ -251,6 +266,15 @@ When a packet arrives at the destination ASBR, it will be checked the destinatio
 So far, IPsec is often used as a VPN which is a technology for private network access through public networks. In the final analysis, IPsec is a highly cost-effective ratio mechanism. Original IPsec AH needs to authenticate the whole constant part of a packet so that it needs to spend amounts of time finding and processing unchangeable fields in the packet. However, RISAV only needs to find a few changeless fields to authenticate the packet decreasing the cost dramatically.
 
 # Security Consideration
+
+<!-- TODO: I don't think NAT is necesarry inter-AS as all the outter IP header should be the unicast IP address
+## NAT scenario
+As RISAV is used in
+-->
+
+## Multipath Problem {#MPProblem}
+<!-- TODO: this is the problem that requires one AS should be logically presented as one entity. That means all ASBRs of one AS should be acted like one ASBR.
+-->
 
 ## Compatibility
 
