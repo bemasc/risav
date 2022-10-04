@@ -215,7 +215,6 @@ For more information about RPKI, one can refer to {{RFC6480}}.
 
 > OPEN QUESTION: What should we say about cases where the handshake fails?  To be truly secure, all traffic from that AS would have to be dropped...
 
-There may be a number of reasons that cause the handshake or the link fails. When one handshake fails, the ACS would know nothing SAs about the peer AS; vice versa. Arrived packets that should be processed with RISAV would be failed to locate available SAs. Then this packet should be processed like a common packet that not be protected with an IPsec AH/ESP header. So do the source and destination ASBR. When the handshake is complete and running after a while one ACS's link failed, the peer ACS would detect the link is failed with the keepalive packets and remove or deprecate the relative SAs. The keepalive packets is defined in {{RFC3948}} while it is not in NAT traversal. After a grace period, the traffic will be recovered. But the failure should be reported to the administrator with the operations protocols. This would decrease the effect on inter-AS traffic.
 
 ## Disabling RISAV
 
