@@ -69,6 +69,7 @@ normative:
   RFC2119:
   RFC2827:
   RFC2986:
+  RFC3948:
   RFC4301:
   RFC4302:
   RFC4303:
@@ -110,14 +111,18 @@ This document provides an RPKI- {{RFC6480}} and IPsec-based {{RFC4301}} inter-AS
 
 {::boilerplate bcp14-tagged}
 
-<!--
-# Terminology
+
+## Terminology
 
 Commonly used terms in this document are described below.
 
 ACS:
 : AS Control Server, which is the logical representative of one AS and is responsible for delivering tags and other information to ASBR.
 
+contact IP:
+: This IP is the IP address of ACS which is published with the RISAVAnnouncement.
+
+<!--
 ASBR:
 : AS border router, which is at the boundary of an AS.
 
@@ -210,6 +215,7 @@ For more information about RPKI, one can refer to {{RFC6480}}.
 
 > OPEN QUESTION: What should we say about cases where the handshake fails?  To be truly secure, all traffic from that AS would have to be dropped...
 
+
 ## Disabling RISAV
 
 To disable RISAV, a participating AS MUST perform the following steps in order:
@@ -223,7 +229,11 @@ Conversely, if any AS no longer publishes a `RISAVAnnouncement`, other ASes MUST
 
 > TODO: Discuss changes to the contact IP, check if there are any race conditions between activation and deactivation, IKEv2 handshakes in progress, SA expiration, etc.
 
+SA has its own expiration time and IKE has its keepalive mechanism. In abnormal case, i.e. the connection is failed after the IKE handshake is established, SA will be always in effect during its lifetime until it expires or the IKE keepalive is failed. In normal case, i.e. the connection is actively down, SA will be expired and RISAV will be disabled immediately.
+
 > OPEN QUESTION: Does IKEv2 have an authenticated permanent rejection option that would help here?
+
+
 
 # Data Plane
 
@@ -236,6 +246,8 @@ When a packet arrives at the source ASBR, it will be checked with the destinatio
 The modification that is applied depends on whether IPsec "transport mode" or "tunnel mode" is active.  This is determined by the presence or absence of the USE_TRANSPORT_MODE notification in the IKEv2 handshake.  RISAV implementations MUST support transport mode, and MAY support tunnel mode.
 
 > OPEN QUESTION: How do peers express a preference or requirement for transport or tunnel mode?
+
+
 
 When a packet arrives at the destination ASBR, it will check the destination address and the source address. If the destination belongs to the AS that the destination ASBR locates in and the source address is in an AS with which this AS has a RISAV SA, the packet is subject to RISAV processing.
 
@@ -317,7 +329,7 @@ Different RISAV modes potentially offer different security properties.  For exam
 
 ## Multipath Problem {#MPProblem}
 
-> TODO: this is the problem that requires one AS should be logically presented as one entity. That means all ASBRs of one AS should be acted like one ASBR.
+This is the problem that requires one AS should be logically presented as one entity. That means all ASBRs of one AS should be acted like one ASBR. Otherwise, different source ASBR would add different IPsec ICV value to the packet. After forwarding, the packet may not arrive at the ASBR as the source ASBR thought. The ICV check may be failed. So the ACS is the entity that represents the AS to negotiate and communicate with peers. The ACS would deliver the messages including SAs and generate tags to the ASBR so that all ASBRs in the same AS would work like one ASBR for they have the same processing material and process in the same way. Thus, the multipath problem is solved.
 
 ## Compatibility
 
@@ -349,7 +361,7 @@ Thanks to broad interest in optimization of IPsec, very high performance impleme
 
 ## NAT scenario
 
-> TODO: I don't think NAT-traversal mode is necesarry inter-AS as all the outter IP header should be the unicast IP address.
+As all the outter IP header should be the unicast IP address, NAT-traversal mode is not necesarry in inter-AS SAV.
 
 # IANA Consideration
 
