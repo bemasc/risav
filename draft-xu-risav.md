@@ -110,20 +110,21 @@ This document provides an RPKI- {{RFC6480}} and IPsec-based {{RFC4301}} inter-AS
 
 {::boilerplate bcp14-tagged}
 
-<!--
 # Terminology
 
 Commonly used terms in this document are described below.
 
 ACS:
-: AS Control Server, which is the logical representative of one AS and is responsible for delivering tags and other information to ASBR.
+: AS Contact Server, which is the logical representative of one AS and is responsible for delivering session keys and other information to ASBR.
+
+Contact IP:
+: The IP address of the ACS.
 
 ASBR:
 : AS border router, which is at the boundary of an AS.
 
 SAV:
 : Source Address Validation, which verifies the source address of an IP packet and guarantee the source address is valid.
--->
 
 # Overview
 
