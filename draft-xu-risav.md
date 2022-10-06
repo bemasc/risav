@@ -202,16 +202,17 @@ These functions are achieved in two steps.  First, each participating AS publish
 RISAVAnnouncement ::= SEQUENCE {
          version [0] INTEGER DEFAULT 0,
          asID ASID,
-         contactIP ipAddress }
+         contactIP ipAddress,
+         testing Boolean }
 ~~~
 
 When a participating AS discovers another participating AS (via its regular sync of the RPKI database), it initiates an IKEv2 handshake between its own contact IP and the other AS's contact IP.  This handshake MUST include an IKE_AUTH exchange that authenticates both ASes with their RPKI ROA certificates.
 
 Once this handshake is complete, each AS MUST activate RISAV on all outgoing packets, and SHOULD drop all non-RISAV traffic from the other AS after a reasonable grace period (e.g. 60 seconds).
 
-For more information about RPKI, one can refer to {{RFC6480}}.
+The "testing" field indicates whether this contact IP is potentially unreliable.  When this field is set to `true`, other ASes MUST fall back to ordinary operation if IKE negotiation fails.  Otherwise, the contact IP is presumed to be fully reliable, and other ASes SHOULD drop all non-RISAV traffic from this AS if IKE negotiation fails (see {downgrade}).
 
-> OPEN QUESTION: What should we say about cases where the handshake fails?  To be truly secure, all traffic from that AS would have to be dropped...
+For more information about RPKI, one can refer to {{RFC6480}}.
 
 
 ## Disabling RISAV
@@ -317,13 +318,23 @@ Static negotiation makes endpoints nearly stateless, which simplifies the provis
 
 # Security Consideration
 
+## Threat models
+
+In general, RISAV seeks to provide a strong defense against arbitrary active attackers who are external to the source and destination AS.  However, different RISAV modes and configurations offer different security properties.
+
+### Replay attacks
+
+In Transport Mode, off-path attackers cannot spoof the source IPs of a participating AS, but any attacker with access to valid traffic can replay it (from anywhere), potentially enabling DoS attacks by replaying expensive traffic (e.g. TCP SYNs, QUIC Initials).  ASes that wish to have replay defense, and are willing to pay the extra data-plane costs, should prefer tunnel mode.
+
+### Downgrade attacks {#downgrade}
+
+An on-path attacker between two participating ASes could attempt to defeat RISAV by blocking IKEv2 handshakes to the Contact IP of a target AS.  If the AS initiating the handshake falls back to non-RISAV behavior after a handshake failure, this enables the attacker to remove all RISAV protection.
+
+This vulnerable behavior is required when the "testing" flag is set, but is otherwise discouraged.
+
 ## Incremental benefit from partial deployment
 
 RISAV provides significant security benefits even if it is only deployed by a fraction of all ASes.  This is particularly clear in the context of reflection attacks.  If two networks implement RISAV, no one in any other network can trigger a reflection attack between these two networks.  Thus, if X% of ASes (selected at random) implement RISAV, participating ASes should see an X% reduction in reflection attack traffic volume.
-
-## Threat models for SAV
-
-Different RISAV modes potentially offer different security properties.  For example, in Transport Mode, off-path attackers cannot spoof the source IPs of a participating AS, but any attacker with access to valid traffic can replay it (from anywhere), potentially enabling DoS attacks by replaying expensive traffic (e.g. TCP SYNs, QUIC Initials).  ASes that wish to have replay defense, and are willing to pay the extra data-plane costs, should prefer tunnel mode.
 
 ## Multipath Problem {#MPProblem}
 
