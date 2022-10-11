@@ -6,12 +6,13 @@ title: 'An RPKI and IPsec-based AS-to-AS Approach for Source Address Validation'
 abbrev: RISAV
 
 docname: draft-xu-risav-latest
-date: 2022-09-30
+date: 2022-10-11
 
 # stand_alone: yes
 
 ipr: trust200902
 # area: Security Area
+stream: IETF
 wg: Network Working Group
 kw: Internet-Draft
 cat: info
@@ -68,21 +69,21 @@ author:
 normative:
   RFC2119:
   RFC2827:
-  RFC2986:
-  RFC3948:
+  #RFC2986:
+  #RFC3948:
   RFC4301:
   RFC4302:
   RFC4303:
   RFC5210:
   RFC5635:
   RFC5905:
-  RFC5996:
+  #RFC5996:
   RFC6278:
   RFC6480:
   RFC7039:
   RFC8174:
   RFC8209:
-  RFC8247:
+  #RFC8247:
   RFC8704:
 
 informative:
@@ -210,7 +211,7 @@ When a participating AS discovers another participating AS (via its regular sync
 
 Once this handshake is complete, each AS MUST activate RISAV on all outgoing packets, and SHOULD drop all non-RISAV traffic from the other AS after a reasonable grace period (e.g. 60 seconds).
 
-The "testing" field indicates whether this contact IP is potentially unreliable.  When this field is set to `true`, other ASes MUST fall back to ordinary operation if IKE negotiation fails.  Otherwise, the contact IP is presumed to be fully reliable, and other ASes SHOULD drop all non-RISAV traffic from this AS if IKE negotiation fails (see {downgrade}).
+The "testing" field indicates whether this contact IP is potentially unreliable.  When this field is set to `true`, other ASes MUST fall back to ordinary operation if IKE negotiation fails.  Otherwise, the contact IP is presumed to be fully reliable, and other ASes SHOULD drop all non-RISAV traffic from this AS if IKE negotiation fails (see {{downgrade}}).
 
 For more information about RPKI, one can refer to {{RFC6480}}.
 
