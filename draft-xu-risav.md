@@ -104,9 +104,13 @@ This document presents RISAV, a protocol for establishing and using IPsec securi
 
 # Introduction
 
-Source address spoofing has been identified years ago at {{RFC2827}}, and {{RFC5210}} has proposed an Source Address Validation Architecture (SAVA) to alleviate such concerns. SAVA classifies this solution into three layers: Access Network, Intra-AS, and Inter-AS. The Inter-AS concerns the SAV at the AS boundaries. It is more challenging for developing the inter-AS source address validation approach because different ASes run different policies in different ISPs independently. It requires the different ASes to collaborate to verify the source address. The inter-AS SAV is more effective than Access or Intra-AS due to its better cost-effectiveness. However, over years of effort, inter-AS source address validation deployment is still not optimistic. An important reason is the difficulty of balancing the clear security benefits of partial implementations with the scalability of large-scale deployments. uRPF {{RFC5635}} {{RFC8704}}, for example, is a routing-based schemes filter spoofing source address's traffic, which may result in a lack of security benefits due to the dynamic nature of routing or incomplete information caused by partial deployments.
+Source address spoofing is the practice of using a source IP address without proper authorization from its owner.  The basic internet routing architecture does not provide any defense against spoofing, so any system can send packets that claim any source address. This practice enables a variety of attacks, most notably volumetric DoS attacks as discussed in {{RFC2827}}.
 
-This document provides an RPKI- {{RFC6480}} and IPsec-based {{RFC4301}} inter-AS approach to source address validation (RISAV). RISAV is a cryptography-based SAV mechanism to reduce the spoofing source address. RPKI provides the reflection relationship between AS numbers (ASN) and IP prefixes. IKEv2 is used to negotiate between two ASes with the Security Association (SA) which contains the algorithm, secret key generating material, and IPsec packet type, and so forth. IPsec is designed for secure the Internet at the IP layer. It introduces two protocols, one is AH (authentication header) {{RFC4302}} which provides authenticity of the whole packet, including the source address. The other is ESP (IP Encapsulating Security Payload) {{RFC4303}} which encrypts the whole packet's payload.
+There are many possible approaches to preventing address spoofing. {{Section 2.1 of RFC5210}} describes three classes of Source Address Validation (SAV): Access Network, Intra-AS, and Inter-AS. Inter-AS SAV is the most challenging class, because different ASes have different policies and operate independently. Inter-AS SAV requires the different ASes to collaborate to verify the source address. However, in the absence of total trust between all ASes, Inter-AS SAV is a prerequisite to defeat source address spoofing.
+
+Despite years of effort, current Inter-AS SAV protocols are not widely deployed. An important reason is the difficulty of balancing the clear security benefits of partial implementations with the scalability of large-scale deployments. uRPF {{RFC5635}} {{RFC8704}}, for example, is a routing-based scheme that filters out spoofed traffic.  In cases where the routing is dynamic or unknown, uRPF deployments must choose between false negatives (i.e. incomplete SAV) and false positives (i.e. broken routing).
+
+This document provides an RPKI- {{RFC6480}} and IPsec-based {{RFC4301}} approach to inter-AS source address validation (RISAV). RISAV is a cryptography-based SAV mechanism to reduce the spoofing source address. In RISAV, the RPKI database acts as a root of trust for IPsec between participating ASes.  Each pair of ASes uses IKEv2 to negotiate an IPsec Security Association (SA). Packets between those ASes are then protected by a modified IPsec Authentication Header (AH) {{RFC4302}} or an Encapsulating Security Payload (ESP){{RFC4303}}. IPsec authenticates the source address, allowing spoofed packets to be dropped at the border of the receiving AS.
 
 ## Requirements Language
 
@@ -135,7 +139,9 @@ The goal of this section is to provides the high level description of what RISAV
 
 ## What RISAV Is
 
-RISAV is a cryptographically-based inter-AS source address validation approach that guarantees security benefits at partial deployment. It aims to provide the IP datagram with a valid source address, with the capability of anti-spoofing, anti-replay, light-weight and efficient, and incremental deployment incentives. As a result, RISAV adds a tag to a packet at the source AS Border Router (ASBR) proving that the packet is with a valid source address, and it would verify and remove this tag at the destination ASBR. The tag will be encapsulated in the Integrity Check Value (ICV) field of IPsec AH/ESP.
+RISAV is a cryptographically-based inter-AS source address validation protocol that provides clear security benefits even at partial deployment. It aims to prove that each IP datagram was sent from inside the AS that owns its source address, defeating spoofing and replay attacks.  It is light-weight and efficient, and provides incremental deployment incentives.
+
+At the source AS Border Router, RISAV adds a MAC to each packet that proves ownership of the packet's source address.  At the recipient's ASBR, RISAV verifies and removes this MAC, recovering the unmodified original packet. The MAC is delivered in the Integrity Check Value (ICV) field of a modified IPsec AH, or as part of the normal IPsec ESP payload.
 
 ## How RISAV Works
 
@@ -179,15 +185,15 @@ A typical workflow of RISAV is shown in {{figure1}}.
 ~~~~~~~~~~~
 {: #figure1 title="RISAV workflow example."}
 
-1. RPKI process. The five Regional Internet Registry (RIR), authorized by IANA, use their root certificate to sign the Certificate Authority (CA) certificate of the Local Internet Registry (LIR). And after that LIR would use a CA certificate to authorize indirectly the Internet Service Provider (ISP) or directly the Autonomous System (AS). When they obtain their own CA certificate, the AS would sign an End Entity (EE) certificate with a Route Origin Authorisation (ROA) which is a cryptographically signed object that states which AS are authorized to originate a certain prefix. Such the reflection of the ASN relationship with IP prefixes would be broadcast to the network. This is the prerequisite.
+1. RPKI process. The five Regional Internet Registries (RIR), authorized by IANA, use their root certificate to sign the Certificate Authority (CA) certificate of the Local Internet Registry (LIR), which use authorize indirectly the Internet Service Provider (ISP) or directly the Autonomous System (AS). When they obtain their own CA certificate, the AS would sign an End Entity (EE) certificate with a Route Origin Authorisation (ROA) which is a cryptographically signed object that states which AS are authorized to originate a certain prefix. This authenticated binding of the ASN to its IP prefixes is published in the RPKI database. This is a prerequisite for RISAV.
 
 2. ACS EE certificate provisioning. The ACS would need its own EE certificate for IKEv2. This EE certificate is REQUIRED like the BGPsec Router Certificate defined in {{RFC8209}}.
 
 3. RISAV announcement. Each participating AS announces its support for RISAV in the RPKI database, including the IP address of its ACS (the "contact IP").
 
-4. SA negotiation and delivery. The ACSes negotiate an SA using IKEv2. When all negotiations are done, the IPsec is established.  After syncrhonization, all ASBRs would get the SA, including the session key and other parameters.
+4. SA negotiation and delivery. The ACSes negotiate an SA using IKEv2. After synchronization, all ASBRs would get the SA, including the session key and other parameters.
 
-5. IPsec communication. It uses IPsec AH for authentication of the IP source address by default. IPsec is often used in tunnel mode as the IPsec VPN. Here, It expands the gateway to the ASBR. When two ends x and y in AS A and B respectively are communicating, the packet from x arriving at its ASBR RA would use the established IPsec channel for adding the representative tag which is generated with the negotiated and synchronized algorithm, session key, IPsec type, and other items and is filled in the ICV field. After the packet arrives at ASBR RB of AS B, it would be inspected by comparing the consistency of the tag at the packet's ICV field and the tag generated in the same way at the source ASBR.
+5. IPsec communication. RISAV uses IPsec AH (i.e. "transport mode") for authentication of the IP source address by default. When an ASBR in AS A sends a packet to AS B, it uses the established IPsec channel to add the required AH header. The ASBR in AS B validates the AH header to ensure that the packet was not spoofed, and removes the header.
 
 # Control Plane
 
@@ -213,7 +219,7 @@ Once this handshake is complete, each AS MUST activate RISAV on all outgoing pac
 
 The "testing" field indicates whether this contact IP is potentially unreliable.  When this field is set to `true`, other ASes MUST fall back to ordinary operation if IKE negotiation fails.  Otherwise, the contact IP is presumed to be fully reliable, and other ASes SHOULD drop all non-RISAV traffic from this AS if IKE negotiation fails (see {{downgrade}}).
 
-For more information about RPKI, one can refer to {{RFC6480}}.
+For more information about RPKI, see {{RFC6480}}.
 
 
 ## Disabling RISAV
@@ -229,7 +235,7 @@ Conversely, if any AS no longer publishes a `RISAVAnnouncement`, other ASes MUST
 
 > TODO: Discuss changes to the contact IP, check if there are any race conditions between activation and deactivation, IKEv2 handshakes in progress, SA expiration, etc.
 
-SA has its own expiration time and IKE has its keepalive mechanism. In abnormal case, i.e. the connection is failed after the IKE handshake is established, SA will be always in effect during its lifetime until it expires or the IKE keepalive is failed. In normal case, i.e. the connection is actively down, SA will be expired and RISAV will be disabled immediately.
+> SA has its own expiration time and IKE has its keepalive mechanism. In abnormal case, i.e. the connection is failed after the IKE handshake is established, SA will be always in effect during its lifetime until it expires or the IKE keepalive is failed. In normal case, i.e. the connection is actively down, SA will be expired and RISAV will be disabled immediately.
 
 > OPEN QUESTION: Does IKEv2 have an authenticated permanent rejection option that would help here?
 
@@ -237,25 +243,23 @@ SA has its own expiration time and IKE has its keepalive mechanism. In abnormal 
 
 # Data Plane
 
-All the ASBRs of the AS are REQUIRED to enable RISAV. It uses SPI for destination ASBR to locate the SA uniquely when processing the AH header in RISAV.
+All the ASBRs of the AS are REQUIRED to enable RISAV. The destination ASBR uses the IPsec SPI to locate the correct SA.
 
-As defined in {{RFC4301}}, the Security Association Database (SAD) stores all the SAs. One data item in SAD includes an Authentication algorithm and corresponding key when AH is supported. The authentication algorithm could be HMAC-MD5, HMAC-SHA-1, or others.
+As defined in {{RFC4301}}, the Security Association Database (SAD) stores all the SAs. Each data item in the SAD includes a cryptographic algorithm (e.g. HMAC-SHA-256), its corresponding key, and other relevant parameters.
 
-When a packet arrives at the source ASBR, it will be checked with the destination address by this ASBR first. If the destination address is in the protection range of RISAV, the packet will be checked by the source address next. If the source address belongs to the AS in which the ASBR locates, the packet needs to be modified for RISAV.
+When an outgoing packet arrives at the source ASBR, its treatment depends on the source and destination address. If the source address belongs to the AS in which the ASBR is located, and the destination address is in an AS for which the ASBR has an active RISAV SA, then the packet needs to be modified for RISAV.
 
 The modification that is applied depends on whether IPsec "transport mode" or "tunnel mode" is active.  This is determined by the presence or absence of the USE_TRANSPORT_MODE notification in the IKEv2 handshake.  RISAV implementations MUST support transport mode, and MAY support tunnel mode.
 
 > OPEN QUESTION: How do peers express a preference or requirement for transport or tunnel mode?
 
-
-
-When a packet arrives at the destination ASBR, it will check the destination address and the source address. If the destination belongs to the AS that the destination ASBR locates in and the source address is in an AS with which this AS has a RISAV SA, the packet is subject to RISAV processing.
+When a packet arrives at the destination ASBR, it will check the destination address and the source address. If the destination belongs to the AS in which the destination ASBR is located, and the source address is in an AS with which this AS has an active RISAV SA, then the packet is subject to RISAV processing.
 
 To avoid DoS attacks, participating ASes MUST drop any outgoing packet to the contact IP of another AS.  Only the AS operator's systems (i.e. the ACS and ASBRs) are permitted to send packets to the contact IPs of other ASes.  ASBRs MAY drop inbound packets to the contact IP from non-participating ASes.
 
 ## Transport Mode
 
-To avoid conflict with other uses of IPsec, RISAV defines its own variant of the IPsec Authentication Header (AH).  The RISAV-AH header format is shown in {{fig2}}.
+To avoid conflict with other uses of IPsec ({{conflict}}), RISAV defines its own variant of the IPsec Authentication Header (AH).  The RISAV-AH header format is shown in {{fig2}}.
 
 ~~~~~~~~~~~
                      1                   2                   3
@@ -283,7 +287,7 @@ In tunnel mode, a RISAV sender ASBR wraps each outgoing packet in an ESP payload
 
 The contact IP decrypts all IPsec traffic to recover the original packets, which are forwarded to the correct destination.  After decryption, the receiving AS MUST check that the source IP and destination IP are in the same AS as the outer source and destination, respectively.
 
-In Tunnel mode, each ASBR maintains its own copy of the SA Database (SAD).  The SAD is indexed by SPI and counterpart AS, except for the replay defense window, which is additionally scoped to the source IP. If a valid ESP packet is received from an unknown IP address, the receiving AS SHOULD allocate a new replay defense window, subject to resource constraints.  This allows replay defense to work as usual.  (If the contact IP is implemented as an ECMP cluster, effective replay defense may require consistent hashing.)
+In tunnel mode, each ASBR maintains its own copy of the SA Database (SAD).  Each copy of the SAD is indexed by SPI and counterpart AS. If a valid ESP packet is received from an unknown IP address, the receiving AS SHOULD allocate a new replay defense window, subject to resource constraints.  This allows replay defense to work as usual.  (If the contact IP is implemented as an ECMP cluster, effective replay defense may require consistent hashing.)
 
 Tunnel mode imposes a space overhead of 73 octets in IPv6.
 
@@ -299,15 +303,18 @@ This section presents potential additions to the design.
 
 ## Header-only authentication
 
-Original IPsec AH needs to authenticate the whole constant part of a packet so that it needs to spend amounts of time finding and processing unchangeable fields in the packet. However, RISAV only needs to find a few changeless fields to authenticate the packet decreasing the cost dramatically.
-
-As authenticating the whole packet causes a heavy burden in the computation, we could define an IKE parameter to negotiate a header-only variant of transport mode that only authenticates the IP source address, IP destination address, etc.
+RISAV-AH, like standard IPsec AH, authenticates the whole constant part of a packet, including the entire payload. To improve efficiency, we could define an IKE parameter to negotiate a header-only variant of transport mode that only authenticates the IP source address, IP destination address, etc.
 
 This would likely result in a 10-30x decrease in cryptographic cost compared to standard IPsec.  However, it would also offer no SAV defense against any attacker who can view legitimate traffic.  An attacker who can read a single authenticated packet could simply replace the payload, allowing it to issue an unlimited number of spoofed packets.
 
 ## Time-based key rotation
 
-It has two ways for an ACS to generate tags. One is using a state machine. The state machine runs and triggers the state transition when time is up. The tag is generated in the process of state transition as the side product. The two ACS in peer AS respectively before data transmission will maintain one state machine pair for each bound. The state machine runs simultaneously after the initial state, state transition algorithm, and state transition interval are negotiated, thus they generate the same tag at the same time. Time triggers state transition which means the ACS MUST synchronize the time to the same time base using like NTP defined in {{RFC5905}}.
+Each IKEv2 handshake negotiates a fixed shared secret, known to both parties. In some cases, it might be desirable to rotate the shared secret frequently:
+
+* In transport mode, frequent rotation would limit how long a single packet can be replayed by a spoofing attacker.
+* If the ASBRs are less secure than the ACS, frequent rotation could limit the impact of a compromised ASBR.
+
+However, increasing the frequency of IKEv2 handshakes would increase the burden on the ACS. One alternative possibility is to use a state machine. The state machine runs and triggers the state transition when time is up. The tag is generated in the process of state transition as the side product. The two ACS in peer AS respectively before data transmission will maintain one state machine pair for each bound. The state machine runs simultaneously after the initial state, state transition algorithm, and state transition interval are negotiated, thus they generate the same tag at the same time. Time triggers state transition which means the ACS MUST synchronize the time to the same time base using like NTP defined in {{RFC5905}}.
 
 For the tag generation method, it MUST be to specify the initial state and initial state length of the state machine, the identifier of a state machine, state transition interval, length of generated Tag, and Tag. For the SA, they will transfer all these payloads in a secure channel between ACS and ASBRs, for instance, in ESP {{RFC4303}}. It is RECOMMENDED to transfer the tags rather than the SA for security and efficiency considerations. The initial state and its length can be specified at the Key Exchange Payload with nothing to be changed. The state machine identifier is the SPI value as the SPI value is uniquely in RISAV. The state transition interval and length of generated Tag should be negotiated by the pair ACS, which will need to allocate one SA attribute. The generated Tag will be sent from ACS to ASBR in a secure channel which MAY be, for example, ESP {{RFC4303}}.
 
@@ -321,7 +328,7 @@ Static negotiation makes endpoints nearly stateless, which simplifies the provis
 
 ## Threat models
 
-In general, RISAV seeks to provide a strong defense against arbitrary active attackers who are external to the source and destination AS.  However, different RISAV modes and configurations offer different security properties.
+In general, RISAV seeks to provide a strong defense against arbitrary active attackers who are external to the source and destination ASes.  However, different RISAV modes and configurations offer different security properties.
 
 ### Replay attacks
 
@@ -337,13 +344,9 @@ This vulnerable behavior is required when the "testing" flag is set, but is othe
 
 RISAV provides significant security benefits even if it is only deployed by a fraction of all ASes.  This is particularly clear in the context of reflection attacks.  If two networks implement RISAV, no one in any other network can trigger a reflection attack between these two networks.  Thus, if X% of ASes (selected at random) implement RISAV, participating ASes should see an X% reduction in reflection attack traffic volume.
 
-## Multipath Problem {#MPProblem}
-
-This is the problem that requires one AS should be logically presented as one entity. That means all ASBRs of one AS should be acted like one ASBR. Otherwise, different source ASBR would add different IPsec ICV value to the packet. After forwarding, the packet may not arrive at the ASBR as the source ASBR thought. The ICV check may be failed. So the ACS is the entity that represents the AS to negotiate and communicate with peers. The ACS would deliver the messages including SAs and generate tags to the ASBR so that all ASBRs in the same AS would work like one ASBR for they have the same processing material and process in the same way. Thus, the multipath problem is solved.
-
 ## Compatibility
 
-### With end-to-end IPsec
+### With end-to-end IPsec {#conflict}
 
 When RISAV is used in transport mode, there is a risk of confusion between the RISAV AH header and end-to-end AH headers used by applications.  This risk is particularly clear during transition periods, when the recipient is not sure whether the sender is using RISAV or not.
 
@@ -351,13 +354,21 @@ To avoid any such confusion, RISAV's transport mode uses a specialized RISAV-AH 
 
 ### With other SAV mechanisms
 
-RISAV can OPTIONAL cooperate with intra-domain SAV and access-layer SAV, such as {{RFC8704}} or SAVI {{RFC7039}}. Only when intra-domain or access-layer SAV, if deployed, check passed can the packet process and forward correctly.
+RISAV is independent from intra-domain SAV and access-layer SAV, such as {{RFC8704}} or SAVI {{RFC7039}}. When these techniques are used together, intra-domain and access-layer SAV checks MUST be enforced before applying RISAV.
 
 # Operational Considerations
 
 ## Reliability
 
-The ACS, represented by a contact IP, must be a high-availability, high-performance service to avoid outages.  When it chooses to use a logical ACS, one AS will elect one distinguished ASBR as the ACS. The distinguished ASBR acting as an ACS will represent the whole AS to communicate with peer AS's ACS. This election takes place prior to the IKE negotiation. An ASBR MUST be a BGP speaker before it is elected as the distinguished ASBR.
+The ACS, represented by a contact IP, must be a high-availability, high-performance service to avoid outages.  This might be achieved by electing one distinguished ASBR as the ACS. The distinguished ASBR acting as an ACS will represent the whole AS to communicate with peer AS's ACS. This election takes place prior to the IKE negotiation. In this arrangement, an ASBR MUST be a BGP speaker before it is elected as the distinguished ASBR.
+
+## Synchronizing Multiple ASBRs {#MPProblem}
+
+In RISAV, all ASBRs of each AS must have the same Security Associations, because the recipient does not keep distinct state for each sending ASBR (except for the replay window in tunnel mode). For example, ASBRs cannot perform IKE negotiation independently.  Instead, the ACS is the entity that represents the AS to negotiate associations with other ASes.
+
+To ensure coherent behavior across the AS, the ACS MUST deliver each SA to all ASBRs in the AS immediately after it is negotiated.  RISAV does not standardize a mechanism for this update broadcast.
+
+During the SA broadcast, ASBRs will briefly be out of sync.  RISAV recommends a grace period to prevent outages during the update process.
 
 ## Performance
 
@@ -371,7 +382,7 @@ Thanks to broad interest in optimization of IPsec, very high performance impleme
 
 ## NAT scenario
 
-As all the outter IP header should be the unicast IP address, NAT-traversal mode is not necesarry in inter-AS SAV.
+As all the outer IP header should be the unicast IP address, NAT-traversal mode is not necessary in inter-AS SAV.
 
 # IANA Consideration
 
