@@ -293,8 +293,6 @@ Tunnel mode imposes a space overhead of 73 octets in IPv6.
 
 > PROBLEM: ESP doesn't protect the source IP, so a packet could be replayed by changing the source IP.  Can we negotiate an extension to ESP that covers the IP header?  Or could we always send from the contact IP and encode the ASBR ID in the low bits of the SPI?
 
-> OPEN QUESTION: Do we need multiple contact IPs per AS, to support fragmented ASes?
-
 # Possible Extensions
 
 This section presents potential additions to the design.
