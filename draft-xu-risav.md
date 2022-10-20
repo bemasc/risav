@@ -110,7 +110,7 @@ There are many possible approaches to preventing address spoofing. {{Section 2.1
 
 Despite years of effort, current Inter-AS SAV protocols are not widely deployed. An important reason is the difficulty of balancing the clear security benefits of partial implementations with the scalability of large-scale deployments. uRPF {{RFC5635}} {{RFC8704}}, for example, is a routing-based scheme that filters out spoofed traffic.  In cases where the routing is dynamic or unknown, uRPF deployments must choose between false negatives (i.e. incomplete SAV) and false positives (i.e. broken routing).
 
-This document provides an RPKI- {{RFC6480}} and IPsec-based {{RFC4301}} approach to inter-AS source address validation (RISAV). RISAV is a cryptography-based SAV mechanism to reduce the spoofing source address. In RISAV, the RPKI database acts as a root of trust for IPsec between participating ASes.  Each pair of ASes uses IKEv2 to negotiate an IPsec Security Association (SA). Packets between those ASes are then protected by a modified IPsec Authentication Header (AH) {{RFC4302}} or an Encapsulating Security Payload (ESP){{RFC4303}}. IPsec authenticates the source address, allowing spoofed packets to be dropped at the border of the receiving AS.
+This document provides an RPKI- {{RFC6480}} and IPsec-based {{RFC4301}} approach to inter-AS source address validation (RISAV). RISAV is a cryptography-based SAV mechanism to reduce the spoofing of source addresses. In RISAV, the RPKI database acts as a root of trust for IPsec between participating ASes.  Each pair of ASes uses IKEv2 to negotiate an IPsec Security Association (SA). Packets between those ASes are then protected by a modified IPsec Authentication Header (AH) {{RFC4302}} or an Encapsulating Security Payload (ESP){{RFC4303}}. IPsec authenticates the source address, allowing spoofed packets to be dropped at the border of the receiving AS.
 
 ## Requirements Language
 
@@ -185,7 +185,7 @@ A typical workflow of RISAV is shown in {{figure1}}.
 ~~~~~~~~~~~
 {: #figure1 title="RISAV workflow example."}
 
-1. RPKI process. The five Regional Internet Registries (RIR), authorized by IANA, use their root certificate to sign the Certificate Authority (CA) certificate of the Local Internet Registry (LIR), which use authorize indirectly the Internet Service Provider (ISP) or directly the Autonomous System (AS). When they obtain their own CA certificate, the AS would sign an End Entity (EE) certificate with a Route Origin Authorisation (ROA) which is a cryptographically signed object that states which AS are authorized to originate a certain prefix. This authenticated binding of the ASN to its IP prefixes is published in the RPKI database. This is a prerequisite for RISAV.
+1. RPKI process. The five Regional Internet Registries (RIR), authorized by IANA, use their root certificate to sign the Certificate Authority (CA) certificate of the Local Internet Registry (LIR), which is used to authorize the Autonomous System (AS) (sometimes indirectly via the Internet Service Provider (ISP)). When they obtain their own CA certificate, the AS would sign an End Entity (EE) certificate with a Route Origin Authorisation (ROA) which is a cryptographically signed object that states which AS are authorized to originate a certain prefix. This authenticated binding of the ASN to its IP prefixes is published in the RPKI database. This is a prerequisite for RISAV.
 
 2. ACS EE certificate provisioning. The ACS would need its own EE certificate for IKEv2. This EE certificate is REQUIRED like the BGPsec Router Certificate defined in {{RFC8209}}.
 
@@ -205,12 +205,12 @@ The functions of the control plane of RISAV include:
 
 These functions are achieved in two steps.  First, each participating AS publishes a Signed Object {{!RFC6488}} in its RPKI Repository containing a `RISAVAnnouncement`:
 
-~~~
+~~~ASN.1
 RISAVAnnouncement ::= SEQUENCE {
          version [0] INTEGER DEFAULT 0,
          asID ASID,
          contactIP ipAddress,
-         testing Boolean }
+         testing BOOLEAN }
 ~~~
 
 When a participating AS discovers another participating AS (via its regular sync of the RPKI database), it initiates an IKEv2 handshake between its own contact IP and the other AS's contact IP.  This handshake MUST include an IKE_AUTH exchange that authenticates both ASes with their RPKI ROA certificates.
@@ -275,7 +275,7 @@ To avoid conflict with other uses of IPsec ({{conflict}}), RISAV defines its own
 ~~~~~~~~~~~
 {: #fig2 title="RISAV-AH Format."}
 
-This format is identical to IPsec standard AH except that the Sequence Number is omitted, because RISAV is presumed to be a "multi-sender SA" for which anti-replay defense is not supported {{RFC4302, Section 2.5}}.  This change saves 8 octets when the ICV is 16, 24, or 32 octets.  For a 16-octet ICV (most common), RISAV-AH adds 24 octets to each packet.
+This format is identical to IPsec standard AH except that the Sequence Number is omitted, because RISAV is presumed to be a "multi-sender SA" for which anti-replay defense is not supported ({{RFC4302, Section 2.5}}).  This change saves 8 octets when the ICV is 16, 24, or 32 octets.  For a 16-octet ICV (most common), RISAV-AH adds 24 octets to each packet.
 
 The RISAV-AH header is only for AS-to-AS communication.  ASes MUST strip off all RISAV-AH headers for packets whose destination is inside the AS, even if the AS is not currently inspecting the ICV values.
 
