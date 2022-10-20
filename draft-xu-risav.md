@@ -6,16 +6,15 @@ title: 'An RPKI and IPsec-based AS-to-AS Approach for Source Address Validation'
 abbrev: RISAV
 
 docname: draft-xu-risav-latest
-date: 2022-10-11
 
 # stand_alone: yes
 
 ipr: trust200902
 # area: Security Area
 stream: IETF
-wg: Network Working Group
+wg: ipsecme
 kw: Internet-Draft
-cat: info
+cat: std
 
 coding: us-ascii
 pi:    # can use array (if all yes) or hash here
