@@ -305,6 +305,17 @@ RISAV-AH, like standard IPsec AH, authenticates the whole constant part of a pac
 
 This would likely result in a 10-30x decrease in cryptographic cost compared to standard IPsec.  However, it would also offer no SAV defense against any attacker who can view legitimate traffic.  An attacker who can read a single authenticated packet could simply replace the payload, allowing it to issue an unlimited number of spoofed packets.
 
+## Time-based key rotation
+
+Each IKEv2 handshake negotiates a fixed shared secret, known to both parties. In some cases, it might be desirable to rotate the shared secret frequently:
+
+* In transport mode, frequent rotation would limit how long a single packet can be replayed by a spoofing attacker.
+* If the ASBRs are less secure than the ACS, frequent rotation could limit the impact of a compromised ASBR.
+
+However, increasing the frequency of IKEv2 handshakes would increase the burden on the ACS. One alternative possibility is to use a state machine. The state machine runs and triggers the state transition when time is up. The tag is generated in the process of state transition as the side product. The two ACS in peer AS respectively before data transmission will maintain one state machine pair for each bound. The state machine runs simultaneously after the initial state, state transition algorithm, and state transition interval are negotiated, thus they generate the same tag at the same time. Time triggers state transition which means the ACS MUST synchronize the time to the same time base using like NTP defined in {{RFC5905}}.
+
+For the tag generation method, it MUST be to specify the initial state and initial state length of the state machine, the identifier of a state machine, state transition interval, length of generated Tag, and Tag. For the SA, they will transfer all these payloads in a secure channel between ACS and ASBRs, for instance, in ESP {{RFC4303}}. It is RECOMMENDED to transfer the tags rather than the SA for security and efficiency considerations. The initial state and its length can be specified at the Key Exchange Payload with nothing to be changed. The state machine identifier is the SPI value as the SPI value is uniquely in RISAV. The state transition interval and length of generated Tag should be negotiated by the pair ACS, which will need to allocate one SA attribute. The generated Tag will be sent from ACS to ASBR in a secure channel which MAY be, for example, ESP {{RFC4303}}.
+
 ## Static Negotiation
 
 The use of IKEv2 between ASes might be fragile, and creates a number of potential race conditions (e.g. if the RPKI database contents change during the handshake).  It is also potentially costly to implement, requiring O(N^2) network activity for N participating ASes.  If these challenges prove significant, one alternative would be to perform the handshake statically via the RPKI database.  For example, static-static ECDH {{RFC6278}} would allow ASes to agree on shared secrets simply by syncing the RPKI database.
