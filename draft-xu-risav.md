@@ -146,7 +146,7 @@ At the source AS Border Router, RISAV adds a MAC to each packet that proves owne
 
 RISAV uses IKEv2 to negotiate an IPsec security association (SA) between any two ASes. RPKI provides the binding relationship between AS numbers, IP ranges, contact IPs, and public keys. After negotiation, all packets between these ASes are secured by use of a modified AH header or a standard ESP payload.
 
-Before deploying RISAV, each AS sets a contact IP representative. When negotiating or consulting with one AS, the peer MUST first communicate with this contact IP. The AS MUST publish exactly one contact IP for each supported address family (i.e. IPv4 and/or IPv6) in the RPKI database.
+Before deploying RISAV, each AS selects one or more representative contact IPs, and publishes them in the RPKI database. When negotiating or consulting with one AS, the peer MUST first communicate with one of these contact IPs.  Each contact IP is used to enable RISAV only for its own address family (i.e. IPv4 or IPv6), so ASes wishing to offer RISAV on both IPv4 and IPv6 must publish at least two contact IPs.
 
 A typical workflow of RISAV is shown in {{figure1}}.
 
