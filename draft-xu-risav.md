@@ -23,6 +23,8 @@ toc: yes
 sortrefs: yes  # defaults to yes
 symrefs: yes
 
+updates: 4302
+
 author:
       -
         name: Ke Xu
@@ -258,27 +260,41 @@ To avoid DoS attacks, participating ASes MUST drop any outgoing packet to the co
 
 ## Transport Mode
 
-To avoid conflict with other uses of IPsec ({{conflict}}), RISAV defines its own variant of the IPsec Authentication Header (AH).  The RISAV-AH header format is shown in {{fig2}}.
+To avoid conflict with other uses of IPsec ({{conflict}}), RISAV updates the IPsec Authentication Header (AH) format, converting one RESERVED octet (which is previously required to always be zero) into a new "Scope" field.  The updated format is shown in {{fig2}}.
 
 ~~~~~~~~~~~
                      1                   2                   3
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-| Next Header   |  Payload Len  |           RESERVED            |
+| Next Header   |  Payload Len  |   RESERVED    |     Scope     |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |                 Security Parameters Index (SPI)               |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                 Integrity Check Value (ICV)                   |
+|                    Sequence Number Field                      |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               |
++                Integrity Check Value-ICV (variable)           |
 |                                                               |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ~~~~~~~~~~~
-{: #fig2 title="RISAV-AH Format."}
+{: #fig2 title="Updated AH Format."}
 
-This format is identical to IPsec standard AH except that the Sequence Number is omitted, because RISAV is presumed to be a "multi-sender SA" for which anti-replay defense is not supported ({{RFC4302, Section 2.5}}).  This change saves 8 octets when the ICV is 16, 24, or 32 octets.  For a 16-octet ICV (most common), RISAV-AH adds 24 octets to each packet.
+The "Scope" field identifies the scope of protection for this authentication header, i.e. the entities that are expected to produce and consume it.  Two Scope values are defined:
 
-The RISAV-AH header is only for AS-to-AS communication.  ASes MUST strip off all RISAV-AH headers for packets whose destination is inside the AS, even if the AS is not currently inspecting the ICV values.
+* 0: IP.  This is the pre-existing use of the Authentication Header, to authenticate packets from the source IP to the destination IP.
+* 1: AS.  This header authenticates the packet from the source AS to the destination AS.
+
+Other Scope values could be defined in the future.
+
+In RISAV's use of AH, the parties are normally expected to disable Sequence Number Checks during IKEv2 negotiation.  However, the RISAV AH header does contain a sequence number, and the parties MAY make use of it.
+
+> QUESTION: How does one disable sequence number checking in IKEv2?  RFC 4302 says "if an SA establishment protocol such as IKE is employed, the receiver SHOULD notify the sender, during SA establishment, if the receiver will not provide anti-replay protection", but I can't find any explanation of how this notification happens.
+
+The AS-scoped AH headers are only for AS-to-AS communication.  Sending ASes MUST NOT add such headers unless the receiving AS has explicitly opted to receive them.  Receiving ASes MUST strip off all such headers for packets whose destination is inside the AS, even if the AS is not currently inspecting the ICV values.
 
 In transport mode, each AS's SA Database (SAD) is indexed by SPI and counterpart AS, regardless of the source and destination IPs.
+
+Transport mode normally imposes a space overhead of 32 octets.
 
 ## Tunnel Mode
 
@@ -300,7 +316,7 @@ This section presents potential additions to the design.
 
 ## Header-only authentication
 
-RISAV-AH, like standard IPsec AH, authenticates the whole constant part of a packet, including the entire payload. To improve efficiency, we could define an IKE parameter to negotiate a header-only variant of transport mode that only authenticates the IP source address, IP destination address, etc.
+An IPsec Authentication Header authenticates the whole constant part of a packet, including the entire payload. To improve efficiency, we could define an IKE parameter to negotiate a header-only variant of transport mode that only authenticates the IP source address, IP destination address, etc.
 
 This would likely result in a 10-30x decrease in cryptographic cost compared to standard IPsec.  However, it would also offer no SAV defense against any attacker who can view legitimate traffic.  An attacker who can read a single authenticated packet could simply replace the payload, allowing it to issue an unlimited number of spoofed packets.
 
@@ -345,9 +361,9 @@ RISAV provides significant security benefits even if it is only deployed by a fr
 
 ### With end-to-end IPsec {#conflict}
 
-When RISAV is used in transport mode, there is a risk of confusion between the RISAV AH header and end-to-end AH headers used by applications.  This risk is particularly clear during transition periods, when the recipient is not sure whether the sender is using RISAV or not.
+When RISAV is used in transport mode, there is a risk of confusion between the RISAV AH header and end-to-end AH headers used by applications.  (In tunnel mode, no such confusion is possible.)  This risk is particularly clear during transition periods, when the recipient is not sure whether the sender is using RISAV or not.
 
-To avoid any such confusion, RISAV's transport mode uses a specialized RISAV-AH header.  (In tunnel mode, no such confusion is possible.)
+To prevent any such confusion, RISAV's transport mode uses a distinctive Scope value in the Authentication Header.  The receiving AS absorbs (and strips) all AH headers with this scope, and ignores those with any other scope, including ordinary end-to-end AH headers.
 
 ### With other SAV mechanisms
 
@@ -383,13 +399,7 @@ As all the outer IP header should be the unicast IP address, NAT-traversal mode 
 
 # IANA Consideration
 
-IF APPROVED IANA is requested to add the following entry to the Assigned Internet Protocol Numbers registry:
-
-* Decimal: $TBD
-* Keyword: RISAV-AH
-* Protocol: AS-to-AS Authentication Header
-* IPv6 Extension Header: Y
-* Refrence: (This document)
+> TODO: Register RISAVAnnouncement.
 
 <!-- # Acknowledgements -->
 <!-- TBD. -->
