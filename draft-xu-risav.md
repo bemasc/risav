@@ -240,7 +240,17 @@ Conversely, if any AS no longer publishes a `RISAVAnnouncement`, other ASes MUST
 
 > OPEN QUESTION: Does IKEv2 have an authenticated permanent rejection option that would help here?
 
+## Green Channel
 
+When ACS is downing, the SA generation may also fail before ACS reboots. ASBR could also suffer from such as misconfiguration, power failure, etc. 
+
+Thus it is the first thing to guarantee the traffic flow when ACS or ASBR is stopped. But the SA generation may be wrong at that time, which means the key generation is not consistent between two communication ASes, it is hard to recover the running system from such a situation.
+
+It needs a mechanism to restore the control flow first, specifically the communication between public IP pairs. RISAV provides a green channel for public IP pairs. 
+
+It is a switch that when the green channel is enabled, the packets with the source address and destination address which are all public IPs MUST NOT be inspected by the RISAV headers. Thus the control packet for restoring RISAV could proceed without hindrance.
+
+However, when the green channel is disabled, the packet with such public IPs at their source address or destination address MUST be inspected as ordinary traffic. 
 
 # Data Plane
 
