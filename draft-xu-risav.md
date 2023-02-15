@@ -58,7 +58,7 @@ author:
         org: Google LLC
         #city:
         #country:
-        email: bemasc@google.com
+        email: ietf@bemasc.net
       -
         name: Haiyang (Henry) Wang
         org: The University of Minnesota at Duluth
@@ -296,6 +296,23 @@ In transport mode, each AS's SA Database (SAD) is indexed by SPI and counterpart
 
 Transport mode normally imposes a space overhead of 32 octets.
 
+### ICMP rewriting
+
+There are several situations in which an intermediate router on the path may generate an ICMP response to a packet, such as a Packet Too Big (PTB) response for Path MTU Discovery, or a Time Exceeded message for Traceroute.  These ICMP responses generally echo a portion of the original packet in their payload.
+
+An ASBR considers an ICMP payload to match a Transport Mode RISAV SA if:
+
+1. The payload's source address is in this AS, AND
+2. The payload's destination address is in the other AS, AND
+3. The payload contains a RISAV AH header whose SPI matches the SA's.
+
+When an ASBR observes a matching ICMP response, it MUST forward it to the intended recipient, with the following modifications:
+
+* The ASBR MUST remove the RISAV AH header from the payload, so that the echoed payload data matches the packet sent by the original sender.
+* When processing a Packet Too Big message, the ASBR MUST reduce the indicated `MTU` value by the total length of the RISAV AH header.
+
+These changes ensure that RISAV remains transparent to the endpoints, similar to the ICMP rewriting required for Network Address Translation {{?RFC5508}} (though much simpler).
+
 ## Tunnel Mode
 
 In tunnel mode, a RISAV sender ASBR wraps each outgoing packet in an ESP payload.  Each ASBR uses its own source address, and sets the destination address to the contact IP of the destination AS.
@@ -307,6 +324,53 @@ In tunnel mode, each ASBR maintains its own copy of the SA Database (SAD).  Each
 Tunnel mode imposes a space overhead of 73 octets in IPv6.
 
 > PROBLEM: ESP doesn't protect the source IP, so a packet could be replayed by changing the source IP.  Can we negotiate an extension to ESP that covers the IP header?  Or could we always send from the contact IP and encode the ASBR ID in the low bits of the SPI?
+
+# MTU Handling
+
+Like any IPsec tunnel, RISAV normally reduces the effective IP Maximum Transmission Unit (MTU) on all paths where RISAV is active.  To ensure standards compliance and avoid operational issues, participating ASes MUST choose a minimum acceptable "inner MTU", and reject any RISAV negotiations whose inner MTU would be lower.
+
+There are two ways for a participating AS to compute the inner MTU:
+
+1. **Prior knowledge of the outer MTU**.  If a participating AS knows the minimum outer MTU on all active routes to another AS (e.g., from the terms of a transit or peering agreement), it SHOULD use this information to calculate the inner MTU of a RISAV SA with that AS.
+1. **Estimation of the outer MTU**.  If the outer MTU is not known in advance, the participating ASes MUST estimate and continuously monitor the MTU, disabling the SA if the inner MTU falls below the minimum acceptable value.  An acceptable MTU estimation procedure is described in {mtu-estimation}.
+
+If the minimum acceptable inner MTU is close or equal to a common outer MTU value (e.g., 1500 octets), RISAV will not be usable in its baseline configuration.  To enable larger inner MTUs, participating ASes MAY offer support for AGGFRAG {{!RFC9347}} in the IKEv2 handshake if they are able to deploy it.
+
+## MTU Enforcement
+
+In tunnel mode, RISAV ASBRs MUST treat the tunnel as a single IP hop whose MTU is given by the current (estimated) inner MTU.  Oversize packets that reach the ASBR SHALL generate Packet Too Big (PTB) ICMP responses (or be fragmented forward, in IPv4) as usual.
+
+In transport mode, RISAV ASBRs SHOULD NOT enforce the estimated inner MTU.  Instead, ASBRs SHOULD add RISAV headers and attempt to send packets as normal, regardless of size.  (This may cause a PTB ICMP response at the current router or a later hop, which is modified and forwarded as described in {icmp-rewriting}.)
+
+In either mode, the ASBR SHOULD apply TCP MSS clamping {{!RFC4459, Section 3.2}} to outbound packets based on the current estimated inner MTU.
+
+## MTU Estimation
+
+This section describes an MTU estimation procedure that is considered acceptable for deployment of RISAV.  Other procedures with similar performance may also be acceptable.
+
+### Step 1: Initial estimate
+
+To compute an initial estimate, the participating ASes use IKEv2 Path MTU Discovery (PMTUD) {{?RFC7383, Section 2.5.2}} between their ACSes during the IKEv2 handshake.  However, unlike the recommendations in {{RFC7383}}, the PMTUD process is performed to single-octet granularity.  The IKEv2 handshake only proceeds if the resulting outer MTU estimate is compatible with the minimum acceptable inner MTU when using the intended SA parameters.
+
+### Step 2: MTU monitoring
+
+The initial MTU estimate may not be correct indefinitely:
+
+* The Path MTU may change due to a configuration change in either participating AS.
+* The Path MTU may change due to a routing change outside of either AS.
+* The Path MTU may be different for packets to or from different portions of the participating ASes.
+
+To ensure that the MTU estimate remains acceptable, and allow for different MTUs across different paths, each ASBR maintains an MTU estimate for each active SA, and updates its MTU estimate whenever it observes a PTB message.  The ASBR's procedure is as follows:
+
+1. Find the matching SA ({icmp-rewriting}) for this PTB message.  If there is none, abort.
+1. Checks the SA's current estimated outer MTU against the PTB MTU.  If the current estimate is smaller or equal, abort.
+1. Perform an outward Traceroute to the PTB payload's destination IP, using packets whose size is the current outer MTU estimate, stopping at the first IP that is equal to the PTB message's sender IP or is inside the destination AS.
+1. If a PTB message is received, reduce the current MTU estimate accordingly.
+1. If the new estimated inner MTU is below the AS's minimum acceptable MTU, notify the ACS to tear down this SA.
+
+Note that the PTB MTU value is not used, because it could have been forged by an off-path attacker.  To preclude such attacks, all Traceroute and PMTUD probe packets contain at least 16 bytes of entropy, which the ASBR checks in the echoed payload.
+
+To prevent wasteful misbehaviors and reflection attacks, this procedure is rate-limited to some reasonable frequency (e.g., at most once per minute per SA).
 
 # Possible Extensions
 
@@ -388,10 +452,6 @@ During the SA broadcast, ASBRs will briefly be out of sync.  RISAV recommends a 
 RISAV requires participating ASes to perform symmetric cryptography on every RISAV-protected packet that they originate or terminate.  This will require significant additional compute capacity that may not be present on existing networks.  However, until most ASes actually implement RISAV, the implementation cost for the few that do is greatly reduced.  For example, if 5% of networks implement RISAV, then participating networks will only need to apply RISAV to 5% of their traffic.
 
 Thanks to broad interest in optimization of IPsec, very high performance implementations are already available.  For example, as of 2021 an IPsec throughput of 1 Terabit per second was achievable using optimized software on a single server {{INTEL}}.
-
-## MTU
-
-> TODO: Figure out what to say about MTU, PMTUD, etc.  Perhaps an MTU probe is required after setup?  Or on an ongoing basis?
 
 ## NAT scenario
 
