@@ -242,15 +242,14 @@ Conversely, if any AS no longer publishes a `RISAVAnnouncement`, other ASes MUST
 
 ## Green Channel
 
-When ACS is downing, the SA generation may also fail before ACS reboots. ASBR could also suffer from such as misconfiguration, power failure, etc.
+In the event of a misconfiguration or loss of state, it is possible that a negotiated SA could become nonfunctional before its expiration time.  For example, if one AS is forced to reset its ACS and ASBRs, it may lose the private keys for all active RISAV SAs.  If RISAV were applied to the IKEv2 traffic used for bootstrapping, the participating ASes would be unable to communicate until these broken SAs expire, likely after multiple hours or days.
 
-Thus it is the first thing to guarantee the traffic flow when ACS or ASBR is stopped. But the SA generation may be wrong at that time, which means the key generation is not consistent between two communication ASes, it is hard to recover the running system from such a situation.
+To ensure that RISAV participants can rapidly recover from this error state, RISAV places control plane traffic in a "green tunnel" that is exempt from RISAV's protections.  This "tunnel" is defined by two requirements:
 
-It needs a mechanism to restore the control flow first, specifically the communication between public IP pairs. RISAV provides a green channel for public IP pairs.
+* RISAV senders MUST NOT add RISAV protection to packets to or from any announced contact IP
+* RISAV recipients MUST NOT enforce RISAV validation on packets sent to or from any announced contact IP.
 
-It is a switch that when the green channel is enabled, the packets with the source address and destination address which are all public IPs MUST NOT be inspected by the RISAV headers. Thus the control packet for restoring RISAV could proceed without hindrance.
-
-However, when the green channel is disabled, the packet with such public IPs at their source address or destination address MUST be inspected as ordinary traffic.
+Although the green tunnel denies RISAV protection to the ACS, the additional mitigations described in {data-plane} ensure that the ACS is nonetheless strongly protected against address-spoofing and DDoS attacks.
 
 # Data Plane
 
