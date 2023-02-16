@@ -82,6 +82,7 @@ normative:
   RFC6278:
   RFC6480:
   RFC7039:
+  RFC7296:
   RFC8174:
   RFC8209:
   #RFC8247:
@@ -249,7 +250,7 @@ To ensure that RISAV participants can rapidly recover from this error state, RIS
 * RISAV senders MUST NOT add RISAV protection to packets to or from any announced contact IP
 * RISAV recipients MUST NOT enforce RISAV validation on packets sent to or from any announced contact IP.
 
-Although the green tunnel denies RISAV protection to the ACS, the additional mitigations described in {data-plane} ensure that the ACS is nonetheless strongly protected against address-spoofing and DDoS attacks.
+Although the green tunnel denies RISAV protection to the ACS, the additional mitigations described in {data-plane} ensure that the ACS is nonetheless strongly protected against address-spoofing and DDoS attacks. In addition, the IKEv2 COOKIE system {{RFC7296, Section 2.6}} could protect ACS to reject attacks based on source address spoofing.
 
 # Data Plane
 
