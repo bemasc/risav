@@ -82,6 +82,7 @@ normative:
   RFC6278:
   RFC6480:
   RFC7039:
+  RFC7296:
   RFC8174:
   RFC8209:
   #RFC8247:
@@ -240,7 +241,16 @@ Conversely, if any AS no longer publishes a `RISAVAnnouncement`, other ASes MUST
 
 > OPEN QUESTION: Does IKEv2 have an authenticated permanent rejection option that would help here?
 
+## Green Channel
 
+In the event of a misconfiguration or loss of state, it is possible that a negotiated SA could become nonfunctional before its expiration time.  For example, if one AS is forced to reset its ACS and ASBRs, it may lose the private keys for all active RISAV SAs.  If RISAV were applied to the IKEv2 traffic used for bootstrapping, the participating ASes would be unable to communicate until these broken SAs expire, likely after multiple hours or days.
+
+To ensure that RISAV participants can rapidly recover from this error state, RISAV places control plane traffic in a "green tunnel" that is exempt from RISAV's protections.  This "tunnel" is defined by two requirements:
+
+* RISAV senders MUST NOT add RISAV protection to packets to or from any announced contact IP
+* RISAV recipients MUST NOT enforce RISAV validation on packets sent to or from any announced contact IP.
+
+Although the green tunnel denies RISAV protection to the ACS, the additional mitigations described in {data-plane} ensure that the ACS has limited exposure to address-spoofing and DDoS attacks. In addition, the ACS can use the IKEv2 COOKIE {{RFC7296, Section 2.6}} and PUZZLE {{?RFC8019}} systems to reject attacks based on source address spoofing.
 
 # Data Plane
 
