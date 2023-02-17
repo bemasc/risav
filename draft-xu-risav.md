@@ -250,7 +250,7 @@ To ensure that RISAV participants can rapidly recover from this error state, RIS
 * RISAV senders MUST NOT add RISAV protection to packets to or from any announced contact IP
 * RISAV recipients MUST NOT enforce RISAV validation on packets sent to or from any announced contact IP.
 
-Although the green tunnel denies RISAV protection to the ACS, the additional mitigations described in {data-plane} ensure that the ACS has limited exposure to address-spoofing and DDoS attacks. In addition, the ACS can use the IKEv2 COOKIE {{?RFC7296, Section 2.6}} and PUZZLE {{?RFC8019}} systems to reject attacks based on source address spoofing.
+Although the green tunnel denies RISAV protection to the ACS, the additional mitigations described in {data-plane} ensure that the ACS has limited exposure to address-spoofing and DDoS attacks. In addition, the ACS can use the IKEv2 COOKIE {{RFC7296, Section 2.6}} and PUZZLE {{?RFC8019}} systems to reject attacks based on source address spoofing.
 
 # Data Plane
 
