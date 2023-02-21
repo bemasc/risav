@@ -226,20 +226,34 @@ For more information about RPKI, see {{RFC6480}}.
 
 ## Disabling RISAV
 
-To disable RISAV, a participating AS MUST perform the following steps in order:
+### Targeted shutdown
 
+IKEv2 SAs can be terminated on demand using the Delete payload ({{RFC7296, Section 1.4.1}}).  In ordinary uses of IKEv2, the SAs exist in inbound-outbound pairs, and deletion of one triggers a response deleting the other.
+
+In RISAV, SAs do not necessarily exist in pairs.  Instead, RISAV's use of IPsec is strictly unidirectional, so deletion does not trigger an explicit response.  Instead, ASes are permitted to delete both inbound and outbound SAs, and deletion of an inbound SA SHOULD cause the other network to retry RISAV negotiation.  If this, or any, RISAV IKEv2 handshake fails with a NO_ADDITIONAL_SAS notification, the following convention applies:
+
+* AS $A is said to have signaled a "RISAV shutdown" to $B if it sends NO_ADDITIONAL_SAS on a handshake with no child SAs.
+* In response, $B MUST halt all further RISAV negotiation to $A until:
+  - At least one hour has passed, OR
+  - $A negotiates a new SA from $A to $B.
+* After at most 24 hours, $B SHOULD resume its regular negotiation policy with $A.
+
+This convention enables participating ASes to shut down RISAV with any other AS, by deleting all SAs and rejecting all new ones.  It also avoids tight retry loops after a shutdown has occurred, but ensures that RISAV is retried at least once a day.
+
+### Total shutdown
+
+To disable RISAV entirely, a participating AS MUST perform the following steps in order:
+
+1. Apply a targeted shutdown to all other networks and delete all existing SAs.
+  - Note that the shutdown procedure can fail if another network's ACS is unreachable.
 1. Stop requiring RISAV authentication of incoming packets.
-2. Remove the `RISAVAnnouncement` from the RPKI Repository.
-3. Wait at least 24 hours.
-4. Stop sending RISAV and shut down the contact IP.
+1. Remove the `RISAVAnnouncement` from the RPKI Repository.
+1. Wait at least 24 hours.
+1. Shut down the contact IP.
 
-Conversely, if any AS no longer publishes a `RISAVAnnouncement`, other ASes MUST immediately stop sending RISAV to that AS, but MUST NOT delete any negotiated Tunnel Mode SAs for at least 24 hours, in order to continue to process encrypted incoming traffic.
+Conversely, if any AS no longer publishes a `RISAVAnnouncement`, other ASes MUST immediately stop sending RISAV to that AS, but MUST NOT delete any active Tunnel Mode SAs for at least 24 hours, in order to continue to process encrypted incoming traffic.
 
 > TODO: Discuss changes to the contact IP, check if there are any race conditions between activation and deactivation, IKEv2 handshakes in progress, SA expiration, etc.
-
-> SA has its own expiration time and IKE has its keepalive mechanism. In abnormal case, i.e. the connection is failed after the IKE handshake is established, SA will be always in effect during its lifetime until it expires or the IKE keepalive is failed. In normal case, i.e. the connection is actively down, SA will be expired and RISAV will be disabled immediately.
-
-> OPEN QUESTION: Does IKEv2 have an authenticated permanent rejection option that would help here?
 
 ## Green Channel
 
