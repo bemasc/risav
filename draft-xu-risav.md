@@ -245,12 +245,12 @@ Conversely, if any AS no longer publishes a `RISAVAnnouncement`, other ASes MUST
 
 In the event of a misconfiguration or loss of state, it is possible that a negotiated SA could become nonfunctional before its expiration time.  For example, if one AS is forced to reset its ACS and ASBRs, it may lose the private keys for all active RISAV SAs.  If RISAV were applied to the IKEv2 traffic used for bootstrapping, the participating ASes would be unable to communicate until these broken SAs expire, likely after multiple hours or days.
 
-To ensure that RISAV participants can rapidly recover from this error state, RISAV places control plane traffic in a "green tunnel" that is exempt from RISAV's protections.  This "tunnel" is defined by two requirements:
+To ensure that RISAV participants can rapidly recover from this error state, RISAV places control plane traffic in a "green channel" that is exempt from RISAV's protections.  This "channel" is defined by two requirements:
 
 * RISAV senders MUST NOT add RISAV protection to packets to or from any announced contact IP
 * RISAV recipients MUST NOT enforce RISAV validation on packets sent to or from any announced contact IP.
 
-Although the green tunnel denies RISAV protection to the ACS, the additional mitigations described in {data-plane} ensure that the ACS has limited exposure to address-spoofing and DDoS attacks. In addition, the ACS can use the IKEv2 COOKIE as defined in {{Section 2.6 of RFC7296}} and PUZZLE defined in {{?RFC8019}} systems to reject attacks based on source address spoofing.
+Although the green channel denies RISAV protection to the ACS, the additional mitigations described in {data-plane} ensure that the ACS has limited exposure to address-spoofing and DDoS attacks. In addition, the ACS can use the IKEv2 COOKIE ({{Section 2.6 of RFC7296}}) and PUZZLE ({{?RFC8019}}) systems to reject attacks based on source address spoofing.
 
 # Data Plane
 
@@ -296,13 +296,7 @@ The "Scope" field identifies the scope of protection for this authentication hea
 
 Other Scope values could be defined in the future.
 
-In RISAV's use of AH, the parties are normally expected to disable Sequence Number Checks during IKEv2 negotiation.  However, the RISAV AH header does contain a sequence number, and the parties MAY make use of it.
-
-> QUESTION: How does one disable sequence number checking in IKEv2?  RFC 4302 says "if an SA establishment protocol such as IKE is employed, the receiver SHOULD notify the sender, during SA establishment, if the receiver will not provide anti-replay protection", but I can't find any explanation of how this notification happens.
-
 The AS-scoped AH headers are only for AS-to-AS communication.  Sending ASes MUST NOT add such headers unless the receiving AS has explicitly opted to receive them.  Receiving ASes MUST strip off all such headers for packets whose destination is inside the AS, even if the AS is not currently inspecting the ICV values.
-
-In transport mode, each AS's SA Database (SAD) is indexed by SPI and counterpart AS, regardless of the source and destination IPs.
 
 Transport mode normally imposes a space overhead of 32 octets.
 
@@ -325,15 +319,9 @@ These changes ensure that RISAV remains transparent to the endpoints, similar to
 
 ## Tunnel Mode
 
-In tunnel mode, a RISAV sender ASBR wraps each outgoing packet in an ESP payload.  Each ASBR uses its own source address, and sets the destination address to the contact IP of the destination AS.
-
-The contact IP decrypts all IPsec traffic to recover the original packets, which are forwarded to the correct destination.  After decryption, the receiving AS MUST check that the source IP and destination IP are in the same AS as the outer source and destination, respectively.
-
-In tunnel mode, each ASBR maintains its own copy of the SA Database (SAD).  Each copy of the SAD is indexed by SPI and counterpart AS. If a valid ESP packet is received from an unknown IP address, the receiving AS SHOULD allocate a new replay defense window, subject to resource constraints.  This allows replay defense to work as usual.  (If the contact IP is implemented as an ECMP cluster, effective replay defense may require consistent hashing.)
+In tunnel mode, a RISAV sender ASBR wraps each outgoing packet in an ESP payload ({{RFC4303}}) and sends it as directed by the corresponding SA.  This may require the ASBR to set the Contact IP as the source address, even if it would not otherwise send packets from that address.  (See also "Anycast", {reliability}).
 
 Tunnel mode imposes a space overhead of 73 octets in IPv6.
-
-> PROBLEM: ESP doesn't protect the source IP, so a packet could be replayed by changing the source IP.  Can we negotiate an extension to ESP that covers the IP header?  Or could we always send from the contact IP and encode the ASBR ID in the low bits of the SPI?
 
 # MTU Handling
 
@@ -344,7 +332,7 @@ There are two ways for a participating AS to compute the inner MTU:
 1. **Prior knowledge of the outer MTU**.  If a participating AS knows the minimum outer MTU on all active routes to another AS (e.g., from the terms of a transit or peering agreement), it SHOULD use this information to calculate the inner MTU of a RISAV SA with that AS.
 1. **Estimation of the outer MTU**.  If the outer MTU is not known in advance, the participating ASes MUST estimate and continuously monitor the MTU, disabling the SA if the inner MTU falls below the minimum acceptable value.  An acceptable MTU estimation procedure is described in {mtu-estimation}.
 
-If the minimum acceptable inner MTU is close or equal to a common outer MTU value (e.g., 1500 octets), RISAV will not be usable in its baseline configuration.  To enable larger inner MTUs, participating ASes MAY offer support for AGGFRAG {{!RFC9347}} in the IKEv2 handshake if they are able to deploy it.
+If the minimum acceptable inner MTU is close or equal to a common outer MTU value (e.g., 1500 octets), RISAV will not be usable in its baseline configuration.  To enable larger inner MTUs, participating ASes MAY offer support for AGGFRAG {{!RFC9347}} in the IKEv2 handshake if they are able to deploy it (see {ts-replay}).
 
 ## MTU Enforcement
 
@@ -373,7 +361,7 @@ The initial MTU estimate may not be correct indefinitely:
 To ensure that the MTU estimate remains acceptable, and allow for different MTUs across different paths, each ASBR maintains an MTU estimate for each active SA, and updates its MTU estimate whenever it observes a PTB message.  The ASBR's procedure is as follows:
 
 1. Find the matching SA ({icmp-rewriting}) for this PTB message.  If there is none, abort.
-1. Checks the SA's current estimated outer MTU against the PTB MTU.  If the current estimate is smaller or equal, abort.
+1. Check the SA's current estimated outer MTU against the PTB MTU.  If the current estimate is smaller or equal, abort.
 1. Perform an outward Traceroute to the PTB payload's destination IP, using packets whose size is the current outer MTU estimate, stopping at the first IP that is equal to the PTB message's sender IP or is inside the destination AS.
 1. If a PTB message is received, reduce the current MTU estimate accordingly.
 1. If the new estimated inner MTU is below the AS's minimum acceptable MTU, notify the ACS to tear down this SA.
@@ -381,6 +369,34 @@ To ensure that the MTU estimate remains acceptable, and allow for different MTUs
 Note that the PTB MTU value is not used, because it could have been forged by an off-path attacker.  To preclude such attacks, all Traceroute and PMTUD probe packets contain at least 16 bytes of entropy, which the ASBR checks in the echoed payload.
 
 To prevent wasteful misbehaviors and reflection attacks, this procedure is rate-limited to some reasonable frequency (e.g., at most once per minute per SA).
+
+# Traffic Selectors and Replay Protection in RISAV {#ts-replay}
+
+The IKEv2 configuration protocol is highly flexible, allowing participating ASes to negotiate many different RISAV configurations.  For RISAV, two important IKEv2 parameters are the Traffic Selector ({{RFC7296, Section 2.9}}) and the Replay Status.
+
+> TODO: Write draft porting Replay Status from RFC 2407 to IKEv2.
+
+## Disabling replay protection
+
+In the simplest RISAV configuration, the sending AS requests creation of a single "Child SA" whose Traffic Selector-initiator (TSi) lists all the IP ranges of the sending AS, and the Traffic Selector-responder (TSr) lists all the IP ranges of the receiving AS.  This allows a single SA to carry all RISAV traffic from one AS to another.  However, this SA is likely to be shared across many ASBRs, and potentially many cores within each ASBR, in both participating ASes.
+
+It is difficult or impossible for a multi-sender SA to use monotonic sequence numbers, as required for anti-replay defense and Extended Sequence Numbers (ESN) (see {{RFC4303, Section 2.2}}).  If the sender cannot ensure correctly ordered sequence numbers, it MUST set the REPLAY-STATUS indication to FALSE in the CREATE_CHILD_SA notification, and MUST delete the SA if the recipient does not confirm that replay detection is disabled.
+
+## Enabling replay protection 
+
+If the sender wishes to allow replay detection, it can create many Child SAs, one for each of its ASBRs (or each core within an ASBR).  The OPTIONAL `CPU_QUEUES` IKEv2 notification {{?I-D.ietf-ipsecme-multi-sa-performance}} may make this process more efficient.  If the sending ASBRs are used for distinct subsets of the sender's IP addresses, the TSi values SHOULD be narrowed accordingly to allow routing optimizations by the receiver.
+
+Even if the sender creates many separate SAs, the receiver might not be able to perform replay detection unless each SA is processed by a single receiving ASBR.  In Tunnel Mode, the receiver can route each SA to a specific ASBR using IKEv2 Active Session Redirect ({{?RFC5685, Section 5}}).
+
+In Transport Mode, assignment of SAs to receiving ASBRs may be possible in cases where each ASBR in the receiving AS is responsible for a distinct subset of its IPs.  To support this configuration, the receiving AS MAY narrow the initial TSr to just the IP ranges for a single ASBR, returning ADDITIONAL_TS_POSSIBLE.  In response, the sending AS MUST reissue the CREATE_CHILD_SA request, with TSr containing the remainder of the IP addresses, allowing the negotiation of separate SAs for each receiving ASBR.
+
+Future IKEv2 extensions such as Sequence Number Subspaces {{?I-D.ponchon-ipsecme-anti-replay-subspaces}} may enable more efficient and easily deployed anti-replay configurations for RISAV.
+
+## Changes to AS IP ranges
+
+If the ACS receives a TSi value that includes IP addresses not owned by the counterpart AS, it MUST reject the SA to prevent IP hijacking.  However, each AS's copy of the RPKI database can be up to 24 hours out of date.  Therefore, when an AS acquires a new IP range, it MUST wait at least 24 hours before including it in a RISAV TSi.
+
+If a tunnel mode SA is established, the receiving AS MUST drop any packet from the tunnel whose source address is not within the tunnel's TSi.
 
 # Possible Extensions
 
@@ -419,7 +435,7 @@ In general, RISAV seeks to provide a strong defense against arbitrary active att
 
 ### Replay attacks
 
-In Transport Mode, off-path attackers cannot spoof the source IPs of a participating AS, but any attacker with access to valid traffic can replay it (from anywhere), potentially enabling DoS attacks by replaying expensive traffic (e.g. TCP SYNs, QUIC Initials).  ASes that wish to have replay defense, and are willing to pay the extra data-plane costs, should prefer tunnel mode.
+When replay detection is disabled, off-path attackers cannot spoof the source IPs of a participating AS, but any attacker with access to valid traffic can replay it (from anywhere), potentially enabling DoS attacks by replaying expensive traffic (e.g. TCP SYNs, QUIC Initials).  ASes that wish to have replay defense must enable it during the IKEv2 handshake (see {{ts-replay}}).
 
 ### Downgrade attacks {#downgrade}
 
@@ -447,13 +463,14 @@ RISAV is independent from intra-domain SAV and access-layer SAV, such as {{RFC87
 
 ## Reliability
 
-The ACS, represented by a contact IP, must be a high-availability, high-performance service to avoid outages.  This might be achieved by electing one distinguished ASBR as the ACS. The distinguished ASBR acting as an ACS will represent the whole AS to communicate with peer AS's ACS. This election takes place prior to the IKE negotiation. In this arrangement, an ASBR MUST be a BGP speaker before it is elected as the distinguished ASBR.
+The ACS, represented by a contact IP, must be a high-availability, high-performance service to avoid outages.  There are various strategies to achieve this, including:
+
+* **Election**. This might be achieved by electing one distinguished ASBR as the ACS. The distinguished ASBR acting as an ACS will represent the whole AS to communicate with peer AS's ACS. This election takes place prior to the IKE negotiation. In this arrangement, an ASBR MUST be a BGP speaker before it is elected as the distinguished ASBR, and a new election MUST replace the ACS if it fails.
+* **Anycast**.  The ACS could be implemented as an anycast service operated by all the ASBRs.  Route flapping can be mitigated using IKEv2 redirection ({{?RFC5685, Section 4}}).  Negotiated SAs must be written into a database that is replicated across all ASBRs.
 
 ## Synchronizing Multiple ASBRs {#MPProblem}
 
-In RISAV, all ASBRs of each AS must have the same Security Associations, because the recipient does not keep distinct state for each sending ASBR (except for the replay window in tunnel mode). For example, ASBRs cannot perform IKE negotiation independently.  Instead, the ACS is the entity that represents the AS to negotiate associations with other ASes.
-
-To ensure coherent behavior across the AS, the ACS MUST deliver each SA to all ASBRs in the AS immediately after it is negotiated.  RISAV does not standardize a mechanism for this update broadcast.
+To ensure coherent behavior across the AS, the ACS MUST deliver each SA to all relevant ASBRs in the AS immediately after it is negotiated.  RISAV does not standardize a mechanism for this update broadcast.
 
 During the SA broadcast, ASBRs will briefly be out of sync.  RISAV recommends a grace period to prevent outages during the update process.
 
