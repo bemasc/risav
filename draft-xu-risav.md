@@ -250,7 +250,7 @@ To ensure that RISAV participants can rapidly recover from this error state, RIS
 * RISAV senders MUST NOT add RISAV protection to packets to or from any announced contact IP
 * RISAV recipients MUST NOT enforce RISAV validation on packets sent to or from any announced contact IP.
 
-Although the green channel denies RISAV protection to the ACS, the additional mitigations described in {data-plane} ensure that the ACS has limited exposure to address-spoofing and DDoS attacks. In addition, the ACS can use the IKEv2 COOKIE ({{Section 2.6 of RFC7296}}) and PUZZLE ({{?RFC8019}}) systems to reject attacks based on source address spoofing.
+Although the green channel denies RISAV protection to the ACS, the additional mitigations described in {{data-plane}} ensure that the ACS has limited exposure to address-spoofing and DDoS attacks. In addition, the ACS can use the IKEv2 COOKIE ({{Section 2.6 of RFC7296}}) and PUZZLE ({{?RFC8019}}) systems to reject attacks based on source address spoofing.
 
 # Data Plane
 
@@ -319,7 +319,7 @@ These changes ensure that RISAV remains transparent to the endpoints, similar to
 
 ## Tunnel Mode
 
-In tunnel mode, a RISAV sender ASBR wraps each outgoing packet in an ESP payload ({{RFC4303}}) and sends it as directed by the corresponding SA.  This may require the ASBR to set the Contact IP as the source address, even if it would not otherwise send packets from that address.  (See also "Anycast", {reliability}).
+In tunnel mode, a RISAV sender ASBR wraps each outgoing packet in an ESP payload ({{RFC4303}}) and sends it as directed by the corresponding SA.  This may require the ASBR to set the Contact IP as the source address, even if it would not otherwise send packets from that address.  (See also "Anycast", {{reliability}}).
 
 Tunnel mode imposes a space overhead of 73 octets in IPv6.
 
@@ -332,7 +332,7 @@ There are two ways for a participating AS to compute the inner MTU:
 1. **Prior knowledge of the outer MTU**.  If a participating AS knows the minimum outer MTU on all active routes to another AS (e.g., from the terms of a transit or peering agreement), it SHOULD use this information to calculate the inner MTU of a RISAV SA with that AS.
 1. **Estimation of the outer MTU**.  If the outer MTU is not known in advance, the participating ASes MUST estimate and continuously monitor the MTU, disabling the SA if the inner MTU falls below the minimum acceptable value.  An acceptable MTU estimation procedure is described in {mtu-estimation}.
 
-If the minimum acceptable inner MTU is close or equal to a common outer MTU value (e.g., 1500 octets), RISAV will not be usable in its baseline configuration.  To enable larger inner MTUs, participating ASes MAY offer support for AGGFRAG {{!RFC9347}} in the IKEv2 handshake if they are able to deploy it (see {ts-replay}).
+If the minimum acceptable inner MTU is close or equal to a common outer MTU value (e.g., 1500 octets), RISAV will not be usable in its baseline configuration.  To enable larger inner MTUs, participating ASes MAY offer support for AGGFRAG {{!RFC9347}} in the IKEv2 handshake if they are able to deploy it (see {{ts-replay}}).
 
 ## MTU Enforcement
 
@@ -382,7 +382,7 @@ In the simplest RISAV configuration, the sending AS requests creation of a singl
 
 It is difficult or impossible for a multi-sender SA to use monotonic sequence numbers, as required for anti-replay defense and Extended Sequence Numbers (ESN) (see {{RFC4303, Section 2.2}}).  If the sender cannot ensure correctly ordered sequence numbers, it MUST set the REPLAY-STATUS indication to FALSE in the CREATE_CHILD_SA notification, and MUST delete the SA if the recipient does not confirm that replay detection is disabled.
 
-## Enabling replay protection 
+## Enabling replay protection
 
 If the sender wishes to allow replay detection, it can create many Child SAs, one for each of its ASBRs (or each core within an ASBR).  The OPTIONAL `CPU_QUEUES` IKEv2 notification {{?I-D.ietf-ipsecme-multi-sa-performance}} may make this process more efficient.  If the sending ASBRs are used for distinct subsets of the sender's IP addresses, the TSi values SHOULD be narrowed accordingly to allow routing optimizations by the receiver.
 
