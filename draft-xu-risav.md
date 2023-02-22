@@ -244,7 +244,7 @@ This convention enables participating ASes to shut down RISAV with any other AS,
 
 To disable RISAV entirely, a participating AS MUST perform the following steps in order:
 
-1. Apply a targeted shutdown to all other networks and delete all existing SAs.
+1. Apply a targeted shutdown ({{targeted-shutdown}}) to all other networks and delete all existing SAs.
   - Note that the shutdown procedure can fail if another network's ACS is unreachable.
 1. Stop requiring RISAV authentication of incoming packets.
 1. Remove the `RISAVAnnouncement` from the RPKI Repository.
