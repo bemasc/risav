@@ -250,7 +250,7 @@ To ensure that RISAV participants can rapidly recover from this error state, RIS
 * RISAV senders MUST NOT add RISAV protection to packets to or from any announced contact IP
 * RISAV recipients MUST NOT enforce RISAV validation on packets sent to or from any announced contact IP.
 
-Although the green tunnel denies RISAV protection to the ACS, the additional mitigations described in {data-plane} ensure that the ACS has limited exposure to address-spoofing and DDoS attacks. In addition, the ACS can use the IKEv2 COOKIE as defined in {{Section 2.6 of RFC7296}} and PUZZLE defined in {{?RFC8019}} systems to reject attacks based on source address spoofing.
+Although the green tunnel denies RISAV protection to the ACS, the additional mitigations described in {{data-plane}} ensure that the ACS has limited exposure to address-spoofing and DDoS attacks. In addition, the ACS can use the IKEv2 COOKIE as defined in {{Section 2.6 of RFC7296}} and PUZZLE defined in {{?RFC8019}} systems to reject attacks based on source address spoofing.
 
 # Data Plane
 
@@ -342,7 +342,7 @@ Like any IPsec tunnel, RISAV normally reduces the effective IP Maximum Transmiss
 There are two ways for a participating AS to compute the inner MTU:
 
 1. **Prior knowledge of the outer MTU**.  If a participating AS knows the minimum outer MTU on all active routes to another AS (e.g., from the terms of a transit or peering agreement), it SHOULD use this information to calculate the inner MTU of a RISAV SA with that AS.
-1. **Estimation of the outer MTU**.  If the outer MTU is not known in advance, the participating ASes MUST estimate and continuously monitor the MTU, disabling the SA if the inner MTU falls below the minimum acceptable value.  An acceptable MTU estimation procedure is described in {mtu-estimation}.
+1. **Estimation of the outer MTU**.  If the outer MTU is not known in advance, the participating ASes MUST estimate and continuously monitor the MTU, disabling the SA if the inner MTU falls below the minimum acceptable value.  An acceptable MTU estimation procedure is described in {{mtu-estimation}}.
 
 If the minimum acceptable inner MTU is close or equal to a common outer MTU value (e.g., 1500 octets), RISAV will not be usable in its baseline configuration.  To enable larger inner MTUs, participating ASes MAY offer support for AGGFRAG {{!RFC9347}} in the IKEv2 handshake if they are able to deploy it.
 
@@ -350,7 +350,7 @@ If the minimum acceptable inner MTU is close or equal to a common outer MTU valu
 
 In tunnel mode, RISAV ASBRs MUST treat the tunnel as a single IP hop whose MTU is given by the current (estimated) inner MTU.  Oversize packets that reach the ASBR SHALL generate Packet Too Big (PTB) ICMP responses (or be fragmented forward, in IPv4) as usual.
 
-In transport mode, RISAV ASBRs SHOULD NOT enforce the estimated inner MTU.  Instead, ASBRs SHOULD add RISAV headers and attempt to send packets as normal, regardless of size.  (This may cause a PTB ICMP response at the current router or a later hop, which is modified and forwarded as described in {icmp-rewriting}.)
+In transport mode, RISAV ASBRs SHOULD NOT enforce the estimated inner MTU.  Instead, ASBRs SHOULD add RISAV headers and attempt to send packets as normal, regardless of size.  (This may cause a PTB ICMP response at the current router or a later hop, which is modified and forwarded as described in {{icmp-rewriting}}.)
 
 In either mode, the ASBR SHOULD apply TCP MSS clamping {{!RFC4459, Section 3.2}} to outbound packets based on the current estimated inner MTU.
 
