@@ -467,6 +467,48 @@ Thanks to broad interest in optimization of IPsec, very high performance impleme
 
 As all the outer IP header should be the unicast IP address, NAT-traversal mode is not necessary in inter-AS SAV.
 
+# Standards Compliance
+
+## IPv6
+
+RISAV modifies the handling of IPv6 packets as they traverse the network, resulting in novel networking behaviors.  This section describes why those behaviors should not be viewed as violating the requirements of {{?RFC8200}}.
+
+### MTU
+
+{{Section 5 of ?RFC8200}} says:
+
+> IPv6 requires that every link in the Internet have an MTU of 1280 octets or greater.  This is known as the IPv6 minimum link MTU.
+
+RISAV adds ~30-80 octets of overhead to each packet, reducing the effective link MTU.  A naive version of RISAV could violate the 1280-octet rule, when running over a (compliant) path with a Path MTU of 1280 octets.
+
+This violation is avoided by the requirements described in {{mtu-handling}}.  The resulting behavior is fully compliant when the underlying Path MTU is stable, and should compensate or disable RISAV within a few seconds if the Path MTU changes.
+
+### Header modifications
+
+{{Section 4 of ?RFC8200}} says:
+
+> Extension headers (except for the Hop-by-Hop Options header) are not processed, inserted, or deleted by any node along a packet's delivery path, until the packet reaches the node (or each of the set of nodes, in the case of multicast) identified in the Destination Address field of the IPv6 header.
+
+In "tunnel mode" ({{tunnel-mode}}), RISAV acts as a classic site-to-site tunnel, potentially adding its own extension headers.  {{Section 4.1 of ?RFC8200}} specifically allows such tunnels, and they are commonly used.
+
+In "transport mode" ({{transport-mode}}), a RISAV ASBR does insert a new extension header, which could be viewed as a violation of this guidance.  However, this new extension header is an implementation detail of a lightweight tunnel: it is only added after confirming that another router on the path will remove it, so that its presence is not detectable by either endpoint.  ({{icmp-rewriting}} adds further requirements to ensure that this header cannot be detected in ICMP responses either.)
+
+### IP address usage
+
+In some RISAV configurations, it is expected that many ASBRs will decrypt and process packets with the destination IP of the ACS and/or emit packets using the source IP of the ACS.  This can be viewed as replacing the central ACS with an "anycast" service, which is generally considered permissible.
+
+## RPKI Usage
+
+{{?RFC9255}} describes limits on the use of RPKI certificates for new purposes, including the following excerpts:
+
+> The RPKI was designed and specified to sign certificates for use within the RPKI itself and to generate Route Origin Authorizations (ROAs) \[RFC6480\] for use in routing. Its design intentionally precluded use for attesting to real-world identity...
+
+> RPKI-based credentials of INRs MUST NOT be used to authenticate real-world documents or transactions.
+
+> When a document is signed with the private key associated with an RPKI certificate, the signer is speaking for the INRs (the IP address space and AS numbers) in the certificate. ... If the signature is valid, the message content comes from a party that is authorized to speak for that subset of INRs.
+
+RISAV's usage of RPKI identity falls squarely within these limits.  The RPKI signature used in the IKEv2 handshake serves only to confirm that this party is authorized to originate and terminate IP packets using the corresponding IP ranges.  The "identity" of this party is not relevant to RISAV.
+
 # IANA Consideration
 
 > TODO: Register RISAVAnnouncement.
