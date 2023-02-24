@@ -262,8 +262,6 @@ When an outgoing packet arrives at the source ASBR, its treatment depends on the
 
 The modification that is applied depends on whether IPsec "transport mode" or "tunnel mode" is active.  This is determined by the presence or absence of the USE_TRANSPORT_MODE notification in the IKEv2 handshake.  RISAV implementations MUST support transport mode, and MAY support tunnel mode.
 
-> OPEN QUESTION: How do peers express a preference or requirement for transport or tunnel mode?
-
 When a packet arrives at the destination ASBR, it will check the destination address and the source address. If the destination belongs to the AS in which the destination ASBR is located, and the source address is in an AS with which this AS has an active RISAV SA, then the packet is subject to RISAV processing.
 
 To avoid DoS attacks, participating ASes MUST drop any outgoing packet to the contact IP of another AS.  Only the AS operator's systems (i.e. the ACS and ASBRs) are permitted to send packets to the contact IPs of other ASes.  ASBRs MAY drop inbound packets to the contact IP from non-participating ASes.
