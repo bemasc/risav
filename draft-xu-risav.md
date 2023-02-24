@@ -230,7 +230,7 @@ For more information about RPKI, see {{RFC6480}}.
 
 IKEv2 SAs can be terminated on demand using the Delete payload ({{RFC7296, Section 1.4.1}}).  In ordinary uses of IKEv2, the SAs exist in inbound-outbound pairs, and deletion of one triggers a response deleting the other.
 
-In RISAV, SAs do not necessarily exist in pairs.  Instead, RISAV's use of IPsec is strictly unidirectional, so deletion does not trigger an explicit response.  Instead, ASes are permitted to delete both inbound and outbound SAs, and deletion of an inbound SA SHOULD cause the other network to retry RISAV negotiation.  If this, or any, RISAV IKEv2 handshake fails with a NO_ADDITIONAL_SAS notification, the following convention applies:
+In RISAV, SAs do not necessarily exist in pairs.  Instead, RISAV's use of IPsec is strictly unidirectional, so deletion does not trigger an explicit response.  Instead, ASes are permitted to delete both inbound and outbound SAs, and deletion of an inbound SA SHOULD cause the other network to retry RISAV negotiation.  If this, or any, RISAV IKEv2 handshake fails with a NO_ADDITIONAL_SAS notification ({{RFC7296, Section 1.3}}), the following convention applies:
 
 * AS $A is said to have signaled a "RISAV shutdown" to $B if it sends NO_ADDITIONAL_SAS on a handshake with no child SAs.
 * In response, $B MUST halt all further RISAV negotiation to $A until:
