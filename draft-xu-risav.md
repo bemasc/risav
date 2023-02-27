@@ -496,7 +496,7 @@ Thanks to broad interest in optimization of IPsec, very high performance impleme
 
 As all the outer IP header should be the unicast IP address, NAT-traversal mode is not necessary in inter-AS SAV.
 
-# Standards Compliance
+# Consistency with Existing Standards
 
 ## IPv6
 
@@ -536,7 +536,7 @@ In some RISAV configurations, it is expected that many ASBRs will decrypt and pr
 
 > When a document is signed with the private key associated with an RPKI certificate, the signer is speaking for the INRs (the IP address space and AS numbers) in the certificate. ... If the signature is valid, the message content comes from a party that is authorized to speak for that subset of INRs.
 
-RISAV's usage of RPKI identity falls squarely within these limits.  The RPKI signature used in the IKEv2 handshake serves only to confirm that this party is authorized to originate and terminate IP packets using the corresponding IP ranges.  The "identity" of this party is not relevant to RISAV.
+RISAV's usage of RPKI key material falls squarely within these limits.  The RPKI signature used in the IKEv2 handshake serves only to confirm that this party is authorized to originate and terminate IP packets using the corresponding IP ranges.  The "identity" of this party is not relevant to RISAV.
 
 # IANA Consideration
 
