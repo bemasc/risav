@@ -274,7 +274,7 @@ As defined in {{RFC4301}}, the Security Association Database (SAD) stores all th
 
 When an outgoing packet arrives at the source ASBR, its treatment depends on the source and destination address. If the source address belongs to the AS in which the ASBR is located, and the destination address is in an AS for which the ASBR has an active RISAV SA, then the packet needs to be modified for RISAV.
 
-The modification that is applied depends on whether IPsec "transport mode" or "tunnel mode" is active.  This is determined by the presence or absence of the USE_TRANSPORT_MODE notification in the IKEv2 handshake.  RISAV implementations MUST support transport mode, and MAY support tunnel mode.
+The modification that is applied depends on whether IPsec "transport mode" or "tunnel mode" is active.  RISAV implementations MUST support transport mode, and MAY support tunnel mode.  The initiator chooses the mode by including or omitting the USE_TRANSPORT_MODE notification in the IKEv2 handshake, retrying in the other configuration if necessary.
 
 When a packet arrives at the destination ASBR, it will check the destination address and the source address. If the destination belongs to the AS in which the destination ASBR is located, and the source address is in an AS with which this AS has an active RISAV SA, then the packet is subject to RISAV processing.
 
@@ -402,7 +402,7 @@ Even if the sender creates many separate SAs, the receiver might not be able to 
 
 In Transport Mode, assignment of SAs to receiving ASBRs may be possible in cases where each ASBR in the receiving AS is responsible for a distinct subset of its IPs.  To support this configuration, the receiving AS MAY narrow the initial TSr to just the IP ranges for a single ASBR, returning ADDITIONAL_TS_POSSIBLE.  In response, the sending AS MUST reissue the CREATE_CHILD_SA request, with TSr containing the remainder of the IP addresses, allowing the negotiation of separate SAs for each receiving ASBR.
 
-Future IKEv2 extensions such as Sequence Number Subspaces {{?I-D.ponchon-ipsecme-anti-replay-subspaces}} may enable more efficient and easily deployed anti-replay configurations for RISAV.
+Future IKEv2 extensions such as Sequence Number Subspaces {{?I-D.ponchon-ipsecme-anti-replay-subspaces}} or Lightweight SAs {{?I-D.mrossberg-ipsecme-multiple-sequence-counters}} may enable more efficient and easily deployed anti-replay configurations for RISAV.
 
 ## Changes to AS IP ranges
 
