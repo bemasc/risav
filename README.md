@@ -2,10 +2,10 @@
 
 This is the working area for the individual Internet-Draft, "An RPKI and IPsec-based AS-to-AS Approach for Source Address Validation".
 
-* [Editor's Copy](https://bemasc.github.io/draft-xu-risav/#go.draft-xu-ipsecme-risav.html)
+* [Editor's Copy](https://bemasc.github.io/risav/#go.draft-xu-ipsecme-risav.html)
 * [Datatracker Page](https://datatracker.ietf.org/doc/draft-xu-ipsecme-risav)
 * [Individual Draft](https://datatracker.ietf.org/doc/html/draft-xu-ipsecme-risav)
-* [Compare Editor's Copy to Individual Draft](https://bemasc.github.io/draft-xu-risav/#go.draft-xu-ipsecme-risav.diff)
+* [Compare Editor's Copy to Individual Draft](https://author-tools.ietf.org/iddiff?url1=draft-xu-ipsecme-risav&url2=https://bemasc.github.io/risav/draft-xu-ipsecme-risav.txt)
 
 
 ## Contributing
