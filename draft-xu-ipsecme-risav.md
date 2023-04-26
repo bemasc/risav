@@ -106,7 +106,7 @@ This document presents RISAV, a protocol for establishing and using IPsec securi
 
 # Introduction
 
-Source address spoofing is the practice of using a source IP address without proper authorization from its owner.  The basic Internet routing architecture does not provide any defense against spoofing, so any system can send packets that claim any source address. This practice enables a variety of attacks, and we have summarized malicious attacks launched or amplified by spoofing address in appendix {{appendixA}}.
+Source address spoofing is the practice of using a source IP address without proper authorization from its owner.  The basic Internet routing architecture does not provide any defense against spoofing, so any system can send packets that claim any source address. This practice enables a variety of attacks, and we have summarized malicious attacks launched or amplified by spoofing address in {{appendixA}}.
 
 There are many possible approaches to preventing address spoofing. {{Section 2.1 of RFC5210}} describes three classes of Source Address Validation (SAV): Access Network, Intra-AS, and Inter-AS. Inter-AS SAV is the most challenging class, because different ASes have different policies and operate independently. Inter-AS SAV requires the different ASes to collaborate to verify the source address. However, in the absence of total trust between all ASes, Inter-AS SAV is a prerequisite to defeat source address spoofing.
 
@@ -143,13 +143,13 @@ The goal of this section is to provides the high level description of what RISAV
 
 RISAV is a cryptographically-based inter-AS source address validation protocol that provides clear security benefits even at partial deployment. It aims to prove that each IP datagram was sent from inside the AS that owns its source address, defeating spoofing and replay attacks.  It is light-weight and efficient, and provides incremental deployment incentives.
 
-At the source AS Border Router, RISAV adds a MAC to each packet that proves ownership of the packet's source address.  At the recipient's ASBR, RISAV verifies and removes this MAC, recovering the unmodified original packet. The MAC is delivered in the Integrity Check Value (ICV) field of a modified IPsec AH, or as part of the normal IPsec ESP payload.
+At the source AS Border Router, RISAV adds a MAC (Message Authentication Code) to each packet that proves ownership of the packet's source address.  At the recipient's ASBR, RISAV verifies and removes this MAC, recovering the unmodified original packet. The MAC is delivered in the Integrity Check Value (ICV) field of a modified IPsec AH, or as part of the normal IPsec ESP payload.
 
-RISAV is not used to provide encription of the whole packet. It also does not aim to defense specific network attacks such as DoS or DDoS.
+RISAV is not used to provide encryption of the whole packet. It also does not aim to defend against specific network attacks such as DoS or DDoS, though RISAV could do more help to avert them.
 
 ## How RISAV Works
 
-RPKI{{!RFC6480}} is the prerequiste of RISAV. RISAV uses RPKI to bind the AS number and IP prefix. The binding relationship is formatted to ROA{{!RFC6482}}.
+RPKI {{!RFC6480}} is the prerequiste of RISAV. RISAV uses RPKI to bind the AS number and IP prefix. The binding relationship is formatted to ROA {{!RFC6482}}.
 
 RISAV uses IKEv2 to negotiate an IPsec security association (SA) between any two ASes. RPKI provides the binding relationship between AS numbers, IP ranges, contact IPs, and public keys. After negotiation, all packets between these ASes are secured by use of a modified AH header or a standard ESP payload.
 
@@ -203,7 +203,7 @@ A typical workflow of RISAV is shown in {{figure1}}.
 
 # Control Plane
 
-The functions of the control plane of RISAV include enabling and disabling RISAV, and it provides a green channel for quickly restarting the system in exception cases.
+The functions of the control plane of RISAV include enabling and disabling RISAV, and it provides a green channel for quickly restarting the system in exceptional cases.
 
 ## Enabling RISAV
 When RISAV is to be enabled, it should:
@@ -563,14 +563,14 @@ RISAV's usage of RPKI key material falls squarely within these limits.  The RPKI
 <!-- TBD. -->
 
 --- back
-# Appendix: Summary of Attacks {#appendixA}
+# Appendix: Summary of Attacks Launched By Spoofing Address {#appendixA}
 
-The malicious attacks that launched by spoofing address can be classified into two parts: direct attack and amplification attack.
+The malicious attacks that launched by spoofing address can be classified into two parts: direct attack and reflection attack. Regardless of the scenario, the packets sent out by attacker would use the spoofed IP address as its source address.
 
 ## Direct Attack
 
-Direct attack is attacks that use spoofing address as the attack methodology. In this case, the packets sent out by attacker to victim would use the spoofed IP address as its source address. It is hard to locate the attackers. These attacks includes DoS, DDoS, SYN flooding, etc.
+The packet with the spoofing address will go to the victim directly. These attacks include DoS, DDoS, flooding-based attacks, etc. In this case, it is hard to say whether this action is launched by the user's misconfiguration or a malicious attacker's intent even if SAV is deployed. But SAV could help to locate where the abnormal traffic originates and to stop it as soon as possible.
 
-## Amplification Attack
+## Reflection Attack
 
-Attackers would not send the packets to victim directly, but they would send packets to a server that runs amplification service, such as DNS, NTP, SNMP, SSDP, and other UDP/TCP-based services. In this case, packet sent to the public server would be multiplicated replyed to the victim, which would be more destructive than direct attack.
+Attackers would not send packets to victims directly, but they would send packets to a server that runs amplification services, such as DNS, NTP, SNMP, SSDP, and other UDP/TCP-based services. The packet sent to the public server would be multiplicatively amplified and replied to the victim, which would be more destructive than a direct attack. In this case, if SAV is deployed, attackers are almost not able to launch such attacks.
