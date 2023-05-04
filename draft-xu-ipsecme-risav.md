@@ -106,7 +106,7 @@ This document presents RISAV, a protocol for establishing and using IPsec securi
 
 # Introduction
 
-Source address spoofing is the practice of using a source IP address without proper authorization from its owner.  The basic Internet routing architecture does not provide any defense against spoofing, so any system can send packets that claim any source address. This practice enables a variety of attacks, and we have summarized malicious attacks launched or amplified by spoofing address in {{appendixA}}.
+Source address spoofing is the practice of using a source IP address without proper authorization from its owner.  The basic Internet routing architecture does not provide any defense against spoofing, so any system can send packets that claim any source address. This practice enables a variety of attacks, and we have summarized malicious attacks launched or amplified by spoofing address in {{appendix-a}}.
 
 There are many possible approaches to preventing address spoofing. {{Section 2.1 of RFC5210}} describes three classes of Source Address Validation (SAV): Access Network, Intra-AS, and Inter-AS. Inter-AS SAV is the most challenging class, because different ASes have different policies and operate independently. Inter-AS SAV requires the different ASes to collaborate to verify the source address. However, in the absence of total trust between all ASes, Inter-AS SAV is a prerequisite to defeat source address spoofing.
 
@@ -563,7 +563,8 @@ RISAV's usage of RPKI key material falls squarely within these limits.  The RPKI
 <!-- TBD. -->
 
 --- back
-# Appendix: Summary of Attacks Launched By Spoofing Address {#appendixA}
+
+# Summary of Attacks Launched By Spoofing Address {#appendix-a}
 
 The malicious attacks that can be launched by spoofing addresses can be classified into two types: direct attacks and reflection attacks. Regardless of the scenario, the packets sent out by attacker would use a spoofed IP address as its source address.
 
