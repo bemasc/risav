@@ -106,7 +106,7 @@ This document presents RISAV, a protocol for establishing and using IPsec securi
 
 # Introduction
 
-Source address spoofing is the practice of using a source IP address without proper authorization from its owner.  The basic internet routing architecture does not provide any defense against spoofing, so any system can send packets that claim any source address. This practice enables a variety of attacks, most notably volumetric DoS attacks as discussed in {{RFC2827}}.
+Source address spoofing is the practice of using a source IP address without proper authorization from its owner.  The basic Internet routing architecture does not provide any defense against spoofing, so any system can send packets that claim any source address. This practice enables a variety of attacks, and we have summarized malicious attacks launched or amplified by spoofing address in {{appendix-a}}.
 
 There are many possible approaches to preventing address spoofing. {{Section 2.1 of RFC5210}} describes three classes of Source Address Validation (SAV): Access Network, Intra-AS, and Inter-AS. Inter-AS SAV is the most challenging class, because different ASes have different policies and operate independently. Inter-AS SAV requires the different ASes to collaborate to verify the source address. However, in the absence of total trust between all ASes, Inter-AS SAV is a prerequisite to defeat source address spoofing.
 
@@ -139,13 +139,17 @@ SAV:
 
 The goal of this section is to provides the high level description of what RISAV is and how RISAV works.
 
-## What RISAV Is
+## What RISAV Is and Is Not
 
 RISAV is a cryptographically-based inter-AS source address validation protocol that provides clear security benefits even at partial deployment. It aims to prove that each IP datagram was sent from inside the AS that owns its source address, defeating spoofing and replay attacks.  It is light-weight and efficient, and provides incremental deployment incentives.
 
-At the source AS Border Router, RISAV adds a MAC to each packet that proves ownership of the packet's source address.  At the recipient's ASBR, RISAV verifies and removes this MAC, recovering the unmodified original packet. The MAC is delivered in the Integrity Check Value (ICV) field of a modified IPsec AH, or as part of the normal IPsec ESP payload.
+At the source AS Border Router, RISAV adds a MAC (Message Authentication Code) to each packet that proves ownership of the packet's source address.  At the recipient's ASBR, RISAV verifies and removes this MAC, recovering the unmodified original packet. The MAC is delivered in the Integrity Check Value (ICV) field of a modified IPsec AH, or as part of the normal IPsec ESP payload.
+
+RISAV supports, but does not require, encryption of the whole packet. It also does not aim to defend against specific network attacks such as DoS or DDoS, though RISAV could do more help to avert them.
 
 ## How RISAV Works
+
+RPKI {{!RFC6480}} is a prerequisite for RISAV. RISAV uses RPKI to bind the AS number and IP prefix. The binding relationship is equivalent to an ROA {{!RFC6482}}.
 
 RISAV uses IKEv2 to negotiate an IPsec security association (SA) between any two ASes. RPKI provides the binding relationship between AS numbers, IP ranges, contact IPs, and public keys. After negotiation, all packets between these ASes are secured by use of a modified AH header or a standard ESP payload.
 
@@ -199,20 +203,33 @@ A typical workflow of RISAV is shown in {{figure1}}.
 
 # Control Plane
 
-The functions of the control plane of RISAV include:
+The functions of the control plane of RISAV include enabling and disabling RISAV, and it provides a green channel for quickly restarting the system in exceptional cases.
 
-* Announcing that this AS supports RISAV.
-* Publishing contact IPs.
-* Performing IPsec session initialization (i.e. IKEv2).
+## Enabling RISAV
+When RISAV is to be enabled, it should:
 
-These functions are achieved in two steps.  First, each participating AS publishes a Signed Object {{!RFC6488}} in its RPKI Repository containing a `RISAVAnnouncement`:
+* announce that this AS supports RISAV,
+* publish contact IPs,
+* and perform IPsec session initialization (i.e. IKEv2).
+
+<!--
+TODO: we may need to enrich this process and describe ASN.1 format of RISAVAnnouncement with more details.
+1. ITU - Introduction to ASN.1: https://www.itu.int/en/ITU-T/asn1/Pages/introduction.aspx
+2. RFC 6025 - ASN.1 Translation: https://www.rfc-editor.org/rfc/rfc6025
+3. RFC 3641 - Generic String Encoding Rules (GSER) for ASN.1 Types: https://www.rfc-editor.org/rfc/rfc3641.html
+4. RFC 6268 - Additional New ASN.1 Modules for the Cryptographic Message Syntax (CMS) and the Public Key Infrastructure Using X.509 (PKIX): https://www.rfc-editor.org/rfc/rfc6268
+-->
+
+These functions are achieved in two steps.  First, each participating AS publishes a Signed Object {{!RFC6488}} in its RPKI Repository containing a `RISAVAnnouncement`.  (This is the only change that RISAV makes in the RPKI.) The ASN.1 form of `RISAVAnnouncement` is as follows:
 
 ~~~ASN.1
 RISAVAnnouncement ::= SEQUENCE {
          version [0] INTEGER DEFAULT 0,
          asID ASID,
-         contactIP ipAddress,
+         contactIP IPAddress,
          testing BOOLEAN }
+ASID              ::= BIT STRING
+IPAddress         ::= BIT STRING
 ~~~
 
 When a participating AS discovers another participating AS (via its regular sync of the RPKI database), it initiates an IKEv2 handshake between its own contact IP and the other AS's contact IP.  This handshake MUST include an IKE_AUTH exchange that authenticates both ASes with their RPKI ROA certificates.
@@ -221,7 +238,7 @@ Once this handshake is complete, each AS MUST activate RISAV on all outgoing pac
 
 The "testing" field indicates whether this contact IP is potentially unreliable.  When this field is set to `true`, other ASes MUST fall back to ordinary operation if IKE negotiation fails.  Otherwise, the contact IP is presumed to be fully reliable, and other ASes SHOULD drop all non-RISAV traffic from this AS if IKE negotiation fails (see {{downgrade}}).
 
-For more information about RPKI, see {{RFC6480}}.
+RISAV participants add one or more `RISAVAnnouncement`s to the repository of RPKI. The RPKI procedures are otherwise the same as in the traditional RPKI. For more information about RPKI, see {{RFC6480}}.
 
 
 ## Disabling RISAV
@@ -546,3 +563,15 @@ RISAV's usage of RPKI key material falls squarely within these limits.  The RPKI
 <!-- TBD. -->
 
 --- back
+
+# Summary of Attacks Launched By Spoofing Address {#appendix-a}
+
+The malicious attacks that can be launched by spoofing addresses can be classified into two types: direct attacks and reflection attacks. Regardless of the scenario, the packets sent out by attacker would use a spoofed IP address as its source address.
+
+## Direct Attack
+
+The packet with a spoofed address will go to the victim directly. These attacks include DoS, DDoS, flooding-based attacks, etc. In this case, it is hard to say whether this action is launched by the user's misconfiguration or a malicious attacker's intent even if SAV is deployed. But SAV could help to locate where the abnormal traffic originates and to stop it as soon as possible.
+
+## Reflection Attack
+
+Attackers would not send packets to victims directly, but they would send packets to a server that runs amplification services, such as DNS, NTP, SNMP, SSDP, and other UDP/TCP-based services. The packet sent to the public server would be multiplicatively amplified and replied to the victim, which would be more destructive than a direct attack. In this case, if SAV is deployed, attackers are almost not able to launch such attacks.
