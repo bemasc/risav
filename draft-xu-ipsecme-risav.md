@@ -145,11 +145,11 @@ RISAV is a cryptographically-based inter-AS source address validation protocol t
 
 At the source AS Border Router, RISAV adds a MAC (Message Authentication Code) to each packet that proves ownership of the packet's source address.  At the recipient's ASBR, RISAV verifies and removes this MAC, recovering the unmodified original packet. The MAC is delivered in the Integrity Check Value (ICV) field of a modified IPsec AH, or as part of the normal IPsec ESP payload.
 
-RISAV is not used to provide encryption of the whole packet. It also does not aim to defend against specific network attacks such as DoS or DDoS, though RISAV could do more help to avert them.
+RISAV supports, but does not require, encryption of the whole packet. It also does not aim to defend against specific network attacks such as DoS or DDoS, though RISAV could do more help to avert them.
 
 ## How RISAV Works
 
-RPKI {{!RFC6480}} is the prerequiste of RISAV. RISAV uses RPKI to bind the AS number and IP prefix. The binding relationship is formatted to ROA {{!RFC6482}}.
+RPKI {{!RFC6480}} is a prerequisite for RISAV. RISAV uses RPKI to bind the AS number and IP prefix. The binding relationship is equivalent to an ROA {{!RFC6482}}.
 
 RISAV uses IKEv2 to negotiate an IPsec security association (SA) between any two ASes. RPKI provides the binding relationship between AS numbers, IP ranges, contact IPs, and public keys. After negotiation, all packets between these ASes are secured by use of a modified AH header or a standard ESP payload.
 
@@ -220,7 +220,7 @@ TODO: we may need to enrich this process and describe ASN.1 format of RISAVAnnou
 4. RFC 6268 - Additional New ASN.1 Modules for the Cryptographic Message Syntax (CMS) and the Public Key Infrastructure Using X.509 (PKIX): https://www.rfc-editor.org/rfc/rfc6268
 -->
 
-These functions are achieved in two steps.  First, each participating AS publishes a Signed Object {{!RFC6488}} in its RPKI Repository containing a `RISAVAnnouncement`, which is the only thing that RISAV uses RPKI different from traditional RPKI. The ASN.1 formation of `RISAVAnnouncement` is as follows:
+These functions are achieved in two steps.  First, each participating AS publishes a Signed Object {{!RFC6488}} in its RPKI Repository containing a `RISAVAnnouncement`.  (This is the only change that RISAV makes in the RPKI.) The ASN.1 form of `RISAVAnnouncement` is as follows:
 
 ~~~ASN.1
 RISAVAnnouncement ::= SEQUENCE {
@@ -238,7 +238,7 @@ Once this handshake is complete, each AS MUST activate RISAV on all outgoing pac
 
 The "testing" field indicates whether this contact IP is potentially unreliable.  When this field is set to `true`, other ASes MUST fall back to ordinary operation if IKE negotiation fails.  Otherwise, the contact IP is presumed to be fully reliable, and other ASes SHOULD drop all non-RISAV traffic from this AS if IKE negotiation fails (see {{downgrade}}).
 
-RISAV just adds one `RISAVAnnouncement` to the repository of RPKI. The other procedure is the same as the traditional RPKI. For more information about RPKI, see {{RFC6480}}.
+RISAV participants add one or more `RISAVAnnouncement`s to the repository of RPKI. The RPKI procedures are otherwise the same as in the traditional RPKI. For more information about RPKI, see {{RFC6480}}.
 
 
 ## Disabling RISAV
@@ -565,11 +565,11 @@ RISAV's usage of RPKI key material falls squarely within these limits.  The RPKI
 --- back
 # Appendix: Summary of Attacks Launched By Spoofing Address {#appendixA}
 
-The malicious attacks that launched by spoofing address can be classified into two parts: direct attack and reflection attack. Regardless of the scenario, the packets sent out by attacker would use the spoofed IP address as its source address.
+The malicious attacks that can be launched by spoofing addresses can be classified into two types: direct attacks and reflection attacks. Regardless of the scenario, the packets sent out by attacker would use a spoofed IP address as its source address.
 
 ## Direct Attack
 
-The packet with the spoofing address will go to the victim directly. These attacks include DoS, DDoS, flooding-based attacks, etc. In this case, it is hard to say whether this action is launched by the user's misconfiguration or a malicious attacker's intent even if SAV is deployed. But SAV could help to locate where the abnormal traffic originates and to stop it as soon as possible.
+The packet with a spoofed address will go to the victim directly. These attacks include DoS, DDoS, flooding-based attacks, etc. In this case, it is hard to say whether this action is launched by the user's misconfiguration or a malicious attacker's intent even if SAV is deployed. But SAV could help to locate where the abnormal traffic originates and to stop it as soon as possible.
 
 ## Reflection Attack
 
