@@ -228,7 +228,7 @@ RISAVAnnouncement ::= SEQUENCE {
          asID ASID,
          contactIP IPAddress,
          testing BOOLEAN }
-ASID              ::= BIT STRING
+ASID              ::= INTEGER
 IPAddress         ::= BIT STRING
 ~~~
 
