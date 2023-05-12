@@ -226,17 +226,23 @@ These functions are achieved in two steps.  First, each participating AS publish
 RISAVAnnouncement ::= SEQUENCE {
          version [0] INTEGER DEFAULT 0,
          asID ASID,
-         contactIP IPAddress,
+         contactIP SEQUENCE (SIZE(2)) OF IPAddressFamily,
          testing BOOLEAN }
 ASID              ::= INTEGER
+IPAddressFamily   ::= SEQUENCE {
+         addressFamily OCTET STRING (SIZE (2..3)),
+         addresses SEQUENCE (SIZE(1..MAX)) OF IPAddress }
 IPAddress         ::= BIT STRING
 ~~~
+
+- version: The version number of RISAVAnnouncement here MUST be 0.
+- asID: The asID field contains the AS number of one Autonomous System that is going to support  RISAV.
+- contactIP: Within the IPAddressFamily structure, addressFamily contains the Address Family Identifier (AFI) of an IP address family. Contact IP of RISAV only supports IPv4 and IPv6 but there could be one more IPv4 or IPv6 address.  Therefore, addressFamily MUST be either 0001 or 0002 while addresses is a list of IP addresses.
+- testing: The "testing" field indicates whether this contact IP is potentially unreliable.  When this field is set to `true`, other ASes MUST fall back to ordinary operation if IKE negotiation fails.  Otherwise, the contact IP is presumed to be fully reliable, and other ASes SHOULD drop all non-RISAV traffic from this AS if IKE negotiation fails (see {{downgrade}}).
 
 When a participating AS discovers another participating AS (via its regular sync of the RPKI database), it initiates an IKEv2 handshake between its own contact IP and the other AS's contact IP.  This handshake MUST include an IKE_AUTH exchange that authenticates both ASes with their RPKI ROA certificates.
 
 Once this handshake is complete, each AS MUST activate RISAV on all outgoing packets, and SHOULD drop all non-RISAV traffic from the other AS after a reasonable grace period (e.g. 60 seconds).
-
-The "testing" field indicates whether this contact IP is potentially unreliable.  When this field is set to `true`, other ASes MUST fall back to ordinary operation if IKE negotiation fails.  Otherwise, the contact IP is presumed to be fully reliable, and other ASes SHOULD drop all non-RISAV traffic from this AS if IKE negotiation fails (see {{downgrade}}).
 
 RISAV participants add one or more `RISAVAnnouncement`s to the repository of RPKI. The RPKI procedures are otherwise the same as in the traditional RPKI. For more information about RPKI, see {{RFC6480}}.
 
