@@ -81,6 +81,7 @@ normative:
   #RFC5996:
   RFC6278:
   RFC6480:
+  RFC6481:
   RFC7039:
   RFC7296:
   RFC8174:
@@ -108,7 +109,7 @@ This document presents RISAV, a protocol for establishing and using IPsec securi
 
 Source address spoofing is the practice of using a source IP address without proper authorization from its owner.  The basic Internet routing architecture does not provide any defense against spoofing, so any system can send packets that claim any source address. This practice enables a variety of attacks, and we have summarized malicious attacks launched or amplified by spoofing address in {{appendix-a}}.
 
-There are many possible approaches to preventing address spoofing. {{Section 2.1 of RFC5210}} describes three classes of Source Address Validation (SAV): Access Network, Intra-AS, and Inter-AS. Inter-AS SAV is the most challenging class, because different ASes have different policies and operate independently. Inter-AS SAV requires the different ASes to collaborate to verify the source address. However, in the absence of total trust between all ASes, Inter-AS SAV is a prerequisite to defeat source address spoofing.
+There are many possible approaches to preventing address spoofing. {{Section 2.1 of RFC5210}} describes three classes of Source Address Validation (SAV): Access Network, Intra-AS, and Inter-AS. Inter-AS SAV is the most challenging class because different ASes have different policies and operate independently. Inter-AS SAV requires the different ASes to collaborate to verify the source address. However, in the absence of total trust between all ASes, Inter-AS SAV is a prerequisite to defeating source address spoofing.
 
 Despite years of effort, current Inter-AS SAV protocols are not widely deployed. An important reason is the difficulty of balancing the clear security benefits of partial implementations with the scalability of large-scale deployments. uRPF {{RFC5635}} {{RFC8704}}, for example, is a routing-based scheme that filters out spoofed traffic.  In cases where the routing is dynamic or unknown, uRPF deployments must choose between false negatives (i.e. incomplete SAV) and false positives (i.e. broken routing).
 
@@ -124,7 +125,7 @@ This document provides an RPKI- {{RFC6480}} and IPsec-based {{RFC4301}} approach
 Commonly used terms in this document are described below.
 
 ACS:
-: AS Contact Server, which is the logical representative of one AS and is responsible for delivering session keys and other information to ASBR.
+: AS Contact Server, which is the logical representation of one AS and is responsible for delivering session keys and other information to ASBR.
 
 Contact IP:
 : The IP address of the ACS.
@@ -133,27 +134,27 @@ ASBR:
 : AS border router, which is at the boundary of an AS.
 
 SAV:
-: Source Address Validation, which verifies the source address of an IP packet and guarantee the source address is valid.
+: Source Address Validation, which verifies the source address of an IP packet and guarantees the source address is valid.
 
 # Overview
 
-The goal of this section is to provides the high level description of what RISAV is and how RISAV works.
+The goal of this section is to provide a high-level description of what RISAV is and how RISAV works.
 
 ## What RISAV Is and Is Not
 
-RISAV is a cryptographically-based inter-AS source address validation protocol that provides clear security benefits even at partial deployment. It aims to prove that each IP datagram was sent from inside the AS that owns its source address, defeating spoofing and replay attacks.  It is light-weight and efficient, and provides incremental deployment incentives.
+RISAV is a cryptographically-based inter-AS source address validation protocol that provides clear security benefits even at partial deployment. It aims to prove that each IP datagram was sent from inside the AS that owns its source address, defeating spoofing and replay attacks.  It is lightweight and efficient and provides incremental deployment incentives.
 
-At the source AS Border Router, RISAV adds a MAC (Message Authentication Code) to each packet that proves ownership of the packet's source address.  At the recipient's ASBR, RISAV verifies and removes this MAC, recovering the unmodified original packet. The MAC is delivered in the Integrity Check Value (ICV) field of a modified IPsec AH, or as part of the normal IPsec ESP payload.
+At the source AS Border Router, RISAV adds a MAC (Message Authentication Code) to each packet that proves ownership of the packet's source address.  At the recipient's ASBR, RISAV verifies and removes this MAC, recovering the unmodified original packet. The MAC is delivered in the Integrity Check Value (ICV) field of a modified IPsec AH or as part of the normal IPsec ESP payload.
 
 RISAV supports, but does not require, encryption of the whole packet. It also does not aim to defend against specific network attacks such as DoS or DDoS, though RISAV could do more help to avert them.
 
 ## How RISAV Works
 
-RPKI {{!RFC6480}} is a prerequisite for RISAV. RISAV uses RPKI to bind the AS number and IP prefix. The binding relationship is equivalent to an ROA {{!RFC6482}}.
+RPKI {{!RFC6480}} is a prerequisite for RISAV. RISAV uses RPKI to bind the AS number and IP prefix. The binding relationship is equivalent to a ROA {{!RFC6482}}.
 
-RISAV uses IKEv2 to negotiate an IPsec security association (SA) between any two ASes. RPKI provides the binding relationship between AS numbers, IP ranges, contact IPs, and public keys. After negotiation, all packets between these ASes are secured by use of a modified AH header or a standard ESP payload.
+RISAV uses IKEv2 to negotiate an IPsec security association (SA) between any two ASes. RPKI provides the binding relationship between AS numbers, IP ranges, contact IPs, and public keys. After negotiation, all packets between these ASes are secured by the use of a modified AH header or a standard ESP payload.
 
-Before deploying RISAV, each AS selects one or more representative contact IPs, and publishes them in the RPKI database. When negotiating or consulting with one AS, the peer MUST first communicate with one of these contact IPs.  Each contact IP is used to enable RISAV only for its own address family (i.e. IPv4 or IPv6), so ASes wishing to offer RISAV on both IPv4 and IPv6 must publish at least two contact IPs.
+Before deploying RISAV, each AS selects one or more representative contact IPs and publishes them in the RPKI database. When negotiating or consulting with one AS, the peer MUST first communicate with one of these contact IPs.  Each contact IP is used to enable RISAV only for its own address family (i.e. IPv4 or IPv6), so ASes wishing to offer RISAV on both IPv4 and IPv6 must publish at least two contact IPs.
 
 A typical workflow of RISAV is shown in {{figure1}}.
 
@@ -191,7 +192,7 @@ A typical workflow of RISAV is shown in {{figure1}}.
 ~~~~~~~~~~~
 {: #figure1 title="RISAV workflow example."}
 
-1. RPKI process. The five Regional Internet Registries (RIR), authorized by IANA, use their root certificate to sign the Certificate Authority (CA) certificate of the Local Internet Registry (LIR), which is used to authorize the Autonomous System (AS) (sometimes indirectly via the Internet Service Provider (ISP)). When they obtain their own CA certificate, the AS would sign an End Entity (EE) certificate with a Route Origin Authorisation (ROA) which is a cryptographically signed object that states which AS are authorized to originate a certain prefix. This authenticated binding of the ASN to its IP prefixes is published in the RPKI database. This is a prerequisite for RISAV.
+1. RPKI process. The five Regional Internet Registries (RIR), authorized by IANA, use their root certificate to sign the Certificate Authority (CA) certificate of the Local Internet Registry (LIR), which is used to authorize the Autonomous System (AS) (sometimes indirectly via the Internet Service Provider (ISP)). When they obtain their own CA certificate, the AS would sign an End Entity (EE) certificate with a Route Origin Authorisation (ROA) which is a cryptographically signed object that states which AS is authorized to originate a certain prefix. This authenticated binding of the ASN to its IP prefixes is published in the RPKI database. This is a prerequisite for RISAV.
 
 2. ACS EE certificate provisioning. The ACS would need its own EE certificate for IKEv2. This EE certificate is REQUIRED like the BGPsec Router Certificate defined in {{RFC8209}}.
 
@@ -223,22 +224,45 @@ TODO: we may need to enrich this process and describe ASN.1 format of RISAVAnnou
 These functions are achieved in two steps.  First, each participating AS publishes a Signed Object {{!RFC6488}} in its RPKI Repository containing a `RISAVAnnouncement`.  (This is the only change that RISAV makes in the RPKI.) The ASN.1 form of `RISAVAnnouncement` is as follows:
 
 ~~~ASN.1
+RPKI-RISAV-2023
+  { iso(1) member-body(2) us(840) rsadsi(113549) pkcs(1)
+    pkcs-9(9) smime(16) modules(0) id-mod-rpki-risav-2023(TBD) }
+
+DEFINITIONS EXPLICIT TAGS ::=
+BEGIN
+
+IMPORTS
+  CONTENT-TYPE
+  FROM CryptographicMessageSyntax-2010 -- in [RFC6268]
+    { iso(1) member-body(2) us(840) rsadsi(113549) pkcs(1)
+      pkcs-9(9) smime(16) modules(0) id-mod-cms-2009(58) } ;
+
+  IPAddressFamily, IPAddress
+  FROM IPAddrAndASCertExtn -- In [RFC3779]
+    { iso(1) identified-organization(3) dod(6) internet(1) security(5)
+      mechanisms(5) pkix(7) mod(0) id-mod-ip-addr-and-as-ident(30) } ;
+
+ct-rpkiRISAVAnnouncement CONTENT-TYPE ::=
+     { TYPE RISAVAnnouncement
+       IDENTIFIED BY id-ct-risav }
+
+id-ct-risav OBJECT IDENTIFIER ::= { iso(1) member-body(2) us(840)
+    rsadsi(113549) pkcs(1) pkcs-9(9) id-smime(16) id-ct(1) risav(TDB2) }
+
 RISAVAnnouncement ::= SEQUENCE {
-         version [0] INTEGER DEFAULT 0,
-         asID ASID,
-         contactIP SEQUENCE (SIZE(2)) OF IPAddressFamily,
-         testing BOOLEAN }
-ASID              ::= INTEGER
-IPAddressFamily   ::= SEQUENCE {
-         addressFamily OCTET STRING (SIZE (2..3)),
-         addresses SEQUENCE (SIZE(1..MAX)) OF IPAddress }
-IPAddress         ::= BIT STRING
+  version [0] INTEGER DEFAULT 0,
+  asID ASID,
+  contactIP SEQUENCE (SIZE(1..2)) OF IPAddressFamily,
+  testing BOOLEAN DEFAULT FALSE }
+
+ASID ::= INTEGER
+END
 ~~~
 
 - version: The version number of RISAVAnnouncement here MUST be 0.
 - asID: The asID field contains the AS number of one Autonomous System that is going to support  RISAV.
-- contactIP: Within the IPAddressFamily structure, addressFamily contains the Address Family Identifier (AFI) of an IP address family. Contact IP of RISAV only supports IPv4 and IPv6 but there could be one more IPv4 or IPv6 address.  Therefore, addressFamily MUST be either 0001 or 0002 while addresses is a list of IP addresses.
-- testing: The "testing" field indicates whether this contact IP is potentially unreliable.  When this field is set to `true`, other ASes MUST fall back to ordinary operation if IKE negotiation fails.  Otherwise, the contact IP is presumed to be fully reliable, and other ASes SHOULD drop all non-RISAV traffic from this AS if IKE negotiation fails (see {{downgrade}}).
+- contactIP: Within the IPAddressFamily structure, addressFamily contains the Address Family Identifier (AFI) of an IP address family. Contact IP of RISAV only supports IPv4 and IPv6 but there could be one more IPv4 or IPv6 address.  Therefore, addressFamily MUST be either 0001 or 0002 while addresses are a list of IP addresses. The inherit attribute MUST be prohibited in IPAddressChoice as there is no need to look into the list of historical contactIPs.
+- testing: The "testing" field indicates whether this contact IP is potentially unreliable.  When this field is set to `true`, other ASes MUST fall back to ordinary operation if IKE negotiation fails.  Otherwise, the contact IP is presumed to be fully reliable, and other ASes SHOULD drop all non-RISAV traffic from this AS if IKE negotiation fails (see {{downgrade}}). So it has the default value of FALSE.
 
 When a participating AS discovers another participating AS (via its regular sync of the RPKI database), it initiates an IKEv2 handshake between its own contact IP and the other AS's contact IP.  This handshake MUST include an IKE_AUTH exchange that authenticates both ASes with their RPKI ROA certificates.
 
@@ -565,14 +589,56 @@ RISAV's usage of RPKI key material falls squarely within these limits.  The RPKI
 
 > TODO: Register RISAVAnnouncement.
 
+## SMI Security for S/MIME CMS Content Type (1.2.840.113549.1.9.16.1)
+
+Please add the id-mod-rpki-risav-2023 to the SMI Security for S/MIME Module Identifier (1.2.840.113549.1.9.16.0) registry (https://www.iana.org/assignments/smi-numbers/smi-numbers.xml#security-smime-0) as follows:
+
+~~~~~~
+Decimal    Description                   Specification
+---------------------------------------------------------------------
+TBD        id-mod-rpki-risav-2023        [RFC-to-be]
+~~~~~~
+
+## SMI Security for S/MIME CMS Content Type registry
+
+Please add the RISAVAnnouncement to the SMI Security for S/MIME CMS Content Type (1.2.840.113549.1.9.16.1) registry (https://www.iana.org/assignments/smi-numbers/smi-numbers.xml#security-smime-1) as follows:
+
+~~~~~~
+Decimal     Description                    Specification
+---------------------------------------------------------------------
+TBD         id-ct-risav                    [RFC-to-be]
+~~~~~~
+
+## RPKI Signed Object registry
+
+Please add RISAVAnnouncement to the RPKI Signed Object registry (https://www.iana.org/assignments/rpki/rpki.xhtml#signed-objects) as follows:
+
+~~~~~~
+Name          OID                          Specification
+---------------------------------------------------------------------
+RISAV
+Announcement  1.2.840.113549.1.9.16.1.TBD  [RFC-to-be]
+~~~~~~
+
+## RPKI Repository Name Scheme Registry
+
+Please add an item for the RISAV Announcement file extension to the "RPKI Repository Name Scheme" registry created by {{RFC6481}} as follows:
+
+~~~
+Filename
+Extension  RPKI Object                      Reference
+---------------------------------------------------------------------
+.ra        RISAVAnnouncement                [RFC-to-be]
+~~~
+
 <!-- # Acknowledgements -->
-<!-- TBD. -->
+<!-- TBD. Russ Housley -->
 
 --- back
 
 # Summary of Attacks Launched By Spoofing Address {#appendix-a}
 
-The malicious attacks that can be launched by spoofing addresses can be classified into two types: direct attacks and reflection attacks. Regardless of the scenario, the packets sent out by attacker would use a spoofed IP address as its source address.
+The malicious attacks that spoofing addresses can launch can be classified into two types: direct attacks and reflection attacks. Regardless of the scenario, the packets sent out by the attacker would use a spoofed IP address as its source address.
 
 ## Direct Attack
 
@@ -580,4 +646,8 @@ The packet with a spoofed address will go to the victim directly. These attacks 
 
 ## Reflection Attack
 
-Attackers would not send packets to victims directly, but they would send packets to a server that runs amplification services, such as DNS, NTP, SNMP, SSDP, and other UDP/TCP-based services. The packet sent to the public server would be multiplicatively amplified and replied to the victim, which would be more destructive than a direct attack. In this case, if SAV is deployed, attackers are almost not able to launch such attacks.
+Attackers would not send packets to victims directly, but they would send packets to a server that runs amplification services, such as DNS, NTP, SNMP, SSDP, and other UDP/TCP-based services. The packet sent to the public server would be multiplicatively amplified and replied to the victim, which would be more destructive than a direct attack. In this case, if SAV is deployed, attackers can almost not launch such attacks.
+
+# Example RISAVAnnouncement eContent Payload
+
+TBD.
