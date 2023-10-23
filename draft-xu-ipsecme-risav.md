@@ -209,7 +209,7 @@ After SA negotiation and RPKI synchronization, RISAV is established. All packets
 
 Basically, at the source AS Border Router, RISAV adds a MAC (Message Authentication Code) to each outgoing packet that proves ownership of the packet's source address. At the recipient's ASBR, RISAV verifies and removes this MAC from the incoming traffic, recovering the unmodified original packet. The MAC is located in the Integrity Check Value (ICV) field of a modified IPsec AH or as part of the standard IPsec ESP payload.
 
-RISAV uses modified IPsec AH for authentication of the IP source address by default. It uses ESP-NULL encryption when using IPsec ESP.
+RISAV uses modified IPsec AH for authentication of the IP source address by default. When using IPsec ESP, RISAV permits the two ASes to negotiate any cipher, including ESP_NULL.
 
 # Control Plane
 
@@ -388,13 +388,11 @@ These changes ensure that RISAV remains transparent to the endpoints, similar to
 
 ## Tunnel Mode
 
-As RISAV does not require encryption for packet, so it uses ESP-NULL to authenticate the packet in tunnel mode.
-
-Traditionally, the ESP ICV is computed on the entire ESP packet, excluding the Authentication Data field. Here, in RISAV, the ESP ICV SHOULD be calculated including the IP Source Address at first, following by SPI, Sequence Number, Payload Data, Padding (if present), Pad Length, and Next Header. Destination Address is ignored.
-
 In tunnel mode, a RISAV sender ASBR wraps each outgoing packet in an ESP payload ({{RFC4303}}) and sends it as directed by the corresponding SA.  This may require the ASBR to set the Contact IP as the source address, even if it would not otherwise send packets from that address.  (See also "Anycast", {{reliability}}).
 
-Tunnel mode imposes a space overhead of 73 octets in IPv6.
+This mode supports encryption, but encryption is not required to achieve source address validation. Participating ASes MAY negotiate the ESP_NULL cipher if encryption is not desired.
+
+Tunnel mode imposes a space overhead of at least 73 octets in IPv6, with the exact value depending on the negotiated cryptographic mode.
 
 # MTU Handling
 
