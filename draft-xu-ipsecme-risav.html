@@ -13,24 +13,24 @@
 <meta content="
        This document presents RISAV, a protocol for establishing and using IPsec security between Autonomous Systems (ASes) using the RPKI identity system. In this protocol, the originating AS adds authenticating information to each outgoing packet at its Border Routers (ASBRs), and the receiving AS verifies and strips this information at its ASBRs. Packets that fail validation are dropped by the ASBR. RISAV achieves Source Address Validation among all participating ASes. 
     " name="description">
-<meta content="xml2rfc 3.17.4" name="generator">
+<meta content="xml2rfc 3.18.2" name="generator">
 <meta content="Internet-Draft" name="keyword">
 <meta content="draft-xu-ipsecme-risav-latest" name="ietf.draft">
 <!-- Generator version information:
-  xml2rfc 3.17.4
-    Python 3.11.4
+  xml2rfc 3.18.2
+    Python 3.11.6
     ConfigArgParse 1.5.3
     google-i18n-address 3.1.0
     intervaltree 3.1.0
     Jinja2 3.1.2
-    lxml 4.9.2
-    platformdirs 3.8.0
+    lxml 4.9.3
+    platformdirs 3.11.0
     pycountry 22.3.5
     PyYAML 6.0
     requests 2.31.0
     setuptools 67.7.2
     six 1.16.0
-    wcwidth 0.2.6
+    wcwidth 0.2.8
 -->
 <link href="draft-xu-ipsecme-risav.xml" rel="alternate" type="application/rfc+xml">
 <link href="#copyright" rel="license">
@@ -653,7 +653,7 @@ sub, sup {
 }
 #toc nav li {
   line-height: 1.3em;
-  margin: 0.75em 0;
+  margin: 2px 0;
   padding-left: 1.2em;
   text-indent: -1.2em;
 }
@@ -746,7 +746,7 @@ hr.addr {
     z-index: 2;
     top: 0;
     right: 0;
-    padding: 0;
+    padding: 1px 0 0 0;
     margin: 0;
     border-bottom: 1px solid #ccc;
     opacity: 0.6;
@@ -870,16 +870,13 @@ hr.addr {
     border-top: none;
     padding-top: 0;
   }
-  figure, pre {
+  figure, pre, .vcard {
     page-break-inside: avoid;
-  }
-  figure {
-    overflow: scroll;
   }
   h1, h2, h3, h4, h5, h6 {
     page-break-after: avoid;
   }
-  h2+*, h3+*, h4+*, h5+*, h6+* {
+  :is(h2, h3, h4, h5, h6)+*, dd {
     page-break-before: avoid;
   }
   pre {
@@ -892,6 +889,9 @@ hr.addr {
   }
   td {
     border-top: 1px solid #ddd;
+  }
+  .toplink {
+    display: none;
   }
 }
 
@@ -993,28 +993,6 @@ address div.right {
   text-align: right;
 }
 
-/* Give the table caption label the same styling as the figcaption */
-
-@media print {
-  .toplink {
-    display: none;
-  }
-
-  /* avoid overwriting the top border line with the ToC header */
-  #toc {
-    padding-top: 1px;
-  }
-
-  /* Avoid page breaks inside dl and author address entries */
-  dd {
-    page-break-before: avoid;
-  }
-  .vcard {
-    page-break-inside: avoid;
-  }
-
-}
-
 /* Dark mode. */
 @media (prefers-color-scheme: dark) {
 :root {
@@ -1051,11 +1029,11 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <thead><tr>
 <td class="left">Internet-Draft</td>
 <td class="center">RISAV</td>
-<td class="right">July 2023</td>
+<td class="right">October 2023</td>
 </tr></thead>
 <tfoot><tr>
 <td class="left">Xu, et al.</td>
-<td class="center">Expires 4 January 2024</td>
+<td class="center">Expires 25 April 2024</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1071,12 +1049,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <a href="https://www.rfc-editor.org/rfc/rfc4302" class="eref">4302</a> (if approved)</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2023-07-03" class="published">3 July 2023</time>
+<time datetime="2023-10-23" class="published">23 October 2023</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2024-01-04">4 January 2024</time></dd>
+<dd class="expires"><time datetime="2024-04-25">25 April 2024</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1134,7 +1112,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 4 January 2024.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 25 April 2024.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1182,6 +1160,17 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2.2.2">
                 <p id="section-toc.1-1.2.2.2.1"><a href="#section-2.2" class="auto internal xref">2.2</a>.  <a href="#name-how-risav-works" class="internal xref">How RISAV Works</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2.2.2.2.1">
+                    <p id="section-toc.1-1.2.2.2.2.1.1"><a href="#section-2.2.1" class="auto internal xref">2.2.1</a>.  <a href="#name-procedure-in-rpki" class="internal xref">Procedure in RPKI</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2.2.2.2.2">
+                    <p id="section-toc.1-1.2.2.2.2.2.1"><a href="#section-2.2.2" class="auto internal xref">2.2.2</a>.  <a href="#name-procedure-of-acs" class="internal xref">Procedure of ACS</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2.2.2.2.3">
+                    <p id="section-toc.1-1.2.2.2.2.3.1"><a href="#section-2.2.3" class="auto internal xref">2.2.3</a>.  <a href="#name-procedure-of-traffic-forwar" class="internal xref">Procedure of Traffic Forwarding</a></p>
+</li>
+                </ul>
 </li>
             </ul>
 </li>
@@ -1451,9 +1440,9 @@ appear in all capitals, as shown here.<a href="#section-1.1-1" class="pilcrow">�
         <h3 id="name-what-risav-is-and-is-not">
 <a href="#section-2.1" class="section-number selfRef">2.1. </a><a href="#name-what-risav-is-and-is-not" class="section-name selfRef">What RISAV Is and Is Not</a>
         </h3>
-<p id="section-2.1-1">RISAV is a cryptographically-based inter-AS source address validation protocol that provides clear security benefits even at partial deployment. It aims to prove that each IP datagram was sent from inside the AS that owns its source address, defeating spoofing and replay attacks.  It is lightweight and efficient and provides incremental deployment incentives.<a href="#section-2.1-1" class="pilcrow">¶</a></p>
-<p id="section-2.1-2">At the source AS Border Router, RISAV adds a MAC (Message Authentication Code) to each packet that proves ownership of the packet's source address.  At the recipient's ASBR, RISAV verifies and removes this MAC, recovering the unmodified original packet. The MAC is delivered in the Integrity Check Value (ICV) field of a modified IPsec AH or as part of the normal IPsec ESP payload.<a href="#section-2.1-2" class="pilcrow">¶</a></p>
-<p id="section-2.1-3">RISAV supports, but does not require, encryption of the whole packet. It also does not aim to defend against specific network attacks such as DoS or DDoS, though RISAV could do more help to avert them.<a href="#section-2.1-3" class="pilcrow">¶</a></p>
+<p id="section-2.1-1">RISAV is a cryptographically-based inter-AS source address validation protocol that provides clear security benefits even at partial deployment. It is lightweight and efficient and provides incremental deployment incentives.<a href="#section-2.1-1" class="pilcrow">¶</a></p>
+<p id="section-2.1-2">RISAV adds IP packet header authentication to IPsec. It aims to prove that each IP datagram was sent from inside the AS that owns its source address, defeating spoofing and replay attacks. It supports, but does not require, encryption of the whole IP packet.<a href="#section-2.1-2" class="pilcrow">¶</a></p>
+<p id="section-2.1-3">RISAV does not aim to defend against specific network attacks such as DoS or DDoS, though RISAV could do more help to avert them.<a href="#section-2.1-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="how-risav-works">
@@ -1461,62 +1450,77 @@ appear in all capitals, as shown here.<a href="#section-1.1-1" class="pilcrow">�
         <h3 id="name-how-risav-works">
 <a href="#section-2.2" class="section-number selfRef">2.2. </a><a href="#name-how-risav-works" class="section-name selfRef">How RISAV Works</a>
         </h3>
-<p id="section-2.2-1">RPKI <span>[<a href="#RFC6480" class="cite xref">RFC6480</a>]</span> is a prerequisite for RISAV. RISAV uses RPKI to bind the AS number and IP prefix. The binding relationship is equivalent to a ROA <span>[<a href="#RFC6482" class="cite xref">RFC6482</a>]</span>.<a href="#section-2.2-1" class="pilcrow">¶</a></p>
-<p id="section-2.2-2">RISAV uses IKEv2 to negotiate an IPsec security association (SA) between any two ASes. RPKI provides the binding relationship between AS numbers, IP ranges, contact IPs, and public keys. After negotiation, all packets between these ASes are secured by the use of a modified AH header or a standard ESP payload.<a href="#section-2.2-2" class="pilcrow">¶</a></p>
-<p id="section-2.2-3">Before deploying RISAV, each AS selects one or more representative contact IPs and publishes them in the RPKI database. When negotiating or consulting with one AS, the peer <span class="bcp14">MUST</span> first communicate with one of these contact IPs.  Each contact IP is used to enable RISAV only for its own address family (i.e. IPv4 or IPv6), so ASes wishing to offer RISAV on both IPv4 and IPv6 must publish at least two contact IPs.<a href="#section-2.2-3" class="pilcrow">¶</a></p>
-<p id="section-2.2-4">A typical workflow of RISAV is shown in <a href="#figure1" class="auto internal xref">Figure 1</a>.<a href="#section-2.2-4" class="pilcrow">¶</a></p>
+<p id="section-2.2-1">A typical workflow of RISAV is shown in <a href="#figure1" class="auto internal xref">Figure 1</a>.<a href="#section-2.2-1" class="pilcrow">¶</a></p>
 <span id="name-risav-workflow-example"></span><div id="figure1">
 <figure id="figure-1">
-          <div class="alignLeft art-text artwork" id="section-2.2-5.1">
+          <div class="alignLeft art-text artwork" id="section-2.2-2.1">
 <pre>
-                            +--------------+
-                            |     IANA     |
-                            +--------------+
-                                   |--------------------------+
-                                   V                          |
-                            +--------------+                  |
-                            |      RIR     |                  |
-                            +--------------+                  |
-                           /                \-----------------+-1. Signing CA
-                          V                  V                |  Certificate
-              +--------------+               +--------------+ |
-              |     LIR1     |               |     LIR2     | |
-              +--------------+               +--------------+ |
-              /                                             \-+
-             V                                               V
-+--------------+                                           +--------------+
-| 3. RISAV     |---------+                          +------| 3. RISAV     |
-| Announcement |         | 2. Signing EE Certificate|      | Announcement |
-|              | +-------+                          +----+ |              |
-|     AS A     | |                                       | |     AS B     |
-| contact IP a | V                                       V | contact IP b |
-|           #######   --------------------------------  #######           |
-|           # ACS #    4. SA Negotiation and Delivery   # ACS #           |
-|           #######   --------------------------------  #######           |
-|              |                                           |              |
-|           ########  +++++++++++++++++++++++++++++++++ ########          |
-|           # ASBR #       5. Data Transmission         # ASBR #          |
-|           ########         with IPsec AH/ESP          ########          |
-|              |      +++++++++++++++++++++++++++++++++    |              |
-+--------------+                                           +--------------+
+                            +-------------+
+                            |    IANA     |
+                            +-------------+
+                                   |-------------------------+
+                                   V                         |
+                            +-------------+                  |
+                            |     RIR     |                  |
+                            +-------------+                  |
+                           /               \-----------------+-1. Signing CA
+                          V                 V                |  Certificate
+              +--------------+              +--------------+ |
+              |     LIR1     |              |     LIR2     | |
+              +--------------+              +--------------+ |
+              /                                            \-+
+             V                                              V
++--------------+                                          +--------------+
+| 3. RISAV     |---------+                         +------| 3. RISAV     |
+| Announcement |         |2. Signing EE Certificate|      | Announcement |
+|              | +-------+                         +----+ |              |
+|     AS A     | |                                      | |     AS B     |
+| contact IP a | V                                      V | contact IP b |
+|           #######  --------------------------------  #######           |
+|           # ACS #   4. SA Negotiation and Delivery   # ACS #           |
+|           #######  --------------------------------  #######           |
+|              |                                          |              |
+|           ######## +++++++++++++++++++++++++++++++++ ########          |
+|           # ASBR #      5. Data Transmission         # ASBR #          |
+|           ########        with IPsec AH/ESP          ########          |
+|              |     +++++++++++++++++++++++++++++++++    |              |
++--------------+                                          +--------------+
 </pre>
 </div>
 <figcaption><a href="#figure-1" class="selfRef">Figure 1</a>:
 <a href="#name-risav-workflow-example" class="selfRef">RISAV workflow example.</a>
           </figcaption></figure>
 </div>
-<ol start="1" type="1" class="normal type-1" id="section-2.2-6">
-<li id="section-2.2-6.1">RPKI process. The five Regional Internet Registries (RIR), authorized by IANA, use their root certificate to sign the Certificate Authority (CA) certificate of the Local Internet Registry (LIR), which is used to authorize the Autonomous System (AS) (sometimes indirectly via the Internet Service Provider (ISP)). When they obtain their own CA certificate, the AS would sign an End Entity (EE) certificate with a Route Origin Authorisation (ROA) which is a cryptographically signed object that states which AS is authorized to originate a certain prefix. This authenticated binding of the ASN to its IP prefixes is published in the RPKI database. This is a prerequisite for RISAV.<a href="#section-2.2-6.1" class="pilcrow">¶</a>
-</li>
-          <li id="section-2.2-6.2">ACS EE certificate provisioning. The ACS would need its own EE certificate for IKEv2. This EE certificate is <span class="bcp14">REQUIRED</span> like the BGPsec Router Certificate defined in <span>[<a href="#RFC8209" class="cite xref">RFC8209</a>]</span>.<a href="#section-2.2-6.2" class="pilcrow">¶</a>
-</li>
-          <li id="section-2.2-6.3">RISAV announcement. Each participating AS announces its support for RISAV in the RPKI database, including the IP address of its ACS (the "contact IP").<a href="#section-2.2-6.3" class="pilcrow">¶</a>
-</li>
-          <li id="section-2.2-6.4">SA negotiation and delivery. The ACSes negotiate an SA using IKEv2. After synchronization, all ASBRs would get the SA, including the session key and other parameters.<a href="#section-2.2-6.4" class="pilcrow">¶</a>
-</li>
-          <li id="section-2.2-6.5">IPsec communication. RISAV uses IPsec AH (i.e. "transport mode") for authentication of the IP source address by default. When an ASBR in AS A sends a packet to AS B, it uses the established IPsec channel to add the required AH header. The ASBR in AS B validates the AH header to ensure that the packet was not spoofed, and removes the header.<a href="#section-2.2-6.5" class="pilcrow">¶</a>
-</li>
-        </ol>
+<div id="procedure-in-rpki">
+<section id="section-2.2.1">
+          <h4 id="name-procedure-in-rpki">
+<a href="#section-2.2.1" class="section-number selfRef">2.2.1. </a><a href="#name-procedure-in-rpki" class="section-name selfRef">Procedure in RPKI</a>
+          </h4>
+<p id="section-2.2.1-1">RPKI <span>[<a href="#RFC6480" class="cite xref">RFC6480</a>]</span> is a prerequisite for RISAV.<a href="#section-2.2.1-1" class="pilcrow">¶</a></p>
+<p id="section-2.2.1-2">The five Regional Internet Registries (RIR), authorized by IANA, use their root certificate to sign the Certificate Authority (CA) certificate of the Local Internet Registry (LIR), which is used to authorize the Autonomous System (AS) (sometimes indirectly via the Internet Service Provider (ISP)). When they obtain their own CA certificate, the AS would sign an End Entity (EE) certificate with a Route Origin Authorisation (ROA) which is a cryptographically signed object that states which AS is authorized to originate a certain prefix, descripted in <span>[<a href="#RFC6482" class="cite xref">RFC6482</a>]</span>. This authenticated binding of the ASN to its IP prefixes is published in the RPKI database.<a href="#section-2.2.1-2" class="pilcrow">¶</a></p>
+<p id="section-2.2.1-3">Beyond ROA, RISAV also <span class="bcp14">REQUIRED</span> RPKI to provide the binding relationship between AS numbers, IP prefixes, contact IPs, and public keys. This process requires RISAV announcement, which tells other AS that this AS enables RISAV. Before deploying RISAV, each AS selects one or more representative contact IPs and publishes them in the RPKI database. When negotiating or consulting with one AS, the peer <span class="bcp14">MUST</span> first communicate with one of these contact IPs.  Each contact IP is used to enable RISAV only for its own address family (i.e. IPv4 or IPv6), so ASes wishing to offer RISAV on both IPv4 and IPv6 must publish at least two contact IPs.<a href="#section-2.2.1-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="procedure-of-acs">
+<section id="section-2.2.2">
+          <h4 id="name-procedure-of-acs">
+<a href="#section-2.2.2" class="section-number selfRef">2.2.2. </a><a href="#name-procedure-of-acs" class="section-name selfRef">Procedure of ACS</a>
+          </h4>
+<p id="section-2.2.2-1">The entity who occupis the contact IPs are the AS Contact Server (ACS). The ACS initiates the RISAV announcement. In practice, each participating AS is <span class="bcp14">REQUIRED</span> to announce its support for RISAV in the RPKI database.<a href="#section-2.2.2-1" class="pilcrow">¶</a></p>
+<p id="section-2.2.2-2">RISAV uses IKEv2 to negotiate IPsec security associations (SA) between any two ASes. ACS represents the AS to negotiate IPsec SAs with pair ASes. The ACS needs its own EE certificate for IKEv2. This EE certificate is <span class="bcp14">REQUIRED</span> like the BGPsec Router Certificate defined in <span>[<a href="#RFC8209" class="cite xref">RFC8209</a>]</span>.<a href="#section-2.2.2-2" class="pilcrow">¶</a></p>
+<p id="section-2.2.2-3">After SAs negotiation and synchronization, all ASBRs would get the SAs from its local AS's ACS, including the session key and other parameters.<a href="#section-2.2.2-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="procedure-of-traffic-forwarding">
+<section id="section-2.2.3">
+          <h4 id="name-procedure-of-traffic-forwar">
+<a href="#section-2.2.3" class="section-number selfRef">2.2.3. </a><a href="#name-procedure-of-traffic-forwar" class="section-name selfRef">Procedure of Traffic Forwarding</a>
+          </h4>
+<p id="section-2.2.3-1">After SA negotiation and RPKI synchronization, RISAV is established. All packets between these ASes <span class="bcp14">SHOULD</span> be secured by adding a modified AH header or a standard ESP header.<a href="#section-2.2.3-1" class="pilcrow">¶</a></p>
+<p id="section-2.2.3-2">Basically, at the source AS Border Router, RISAV adds a MAC (Message Authentication Code) to each outgoing packet that proves ownership of the packet's source address. At the recipient's ASBR, RISAV verifies and removes this MAC from the incoming traffic, recovering the unmodified original packet. The MAC is located in the Integrity Check Value (ICV) field of a modified IPsec AH or as part of the standard IPsec ESP payload.<a href="#section-2.2.3-2" class="pilcrow">¶</a></p>
+<p id="section-2.2.3-3">RISAV uses modified IPsec AH for authentication of the IP source address by default. It uses ESP-NULL encryption when using IPsec ESP.<a href="#section-2.2.3-3" class="pilcrow">¶</a></p>
+</section>
+</div>
 </section>
 </div>
 </section>
@@ -1534,14 +1538,17 @@ appear in all capitals, as shown here.<a href="#section-1.1-1" class="pilcrow">�
         </h3>
 <p id="section-3.1-1">When RISAV is to be enabled, it should:<a href="#section-3.1-1" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-3.1-2.1">announce that this AS supports RISAV,<a href="#section-3.1-2.1" class="pilcrow">¶</a>
+<li class="normal" id="section-3.1-2.1">
+            <p id="section-3.1-2.1.1">announce that this AS supports RISAV,<a href="#section-3.1-2.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-3.1-2.2">publish contact IPs,<a href="#section-3.1-2.2" class="pilcrow">¶</a>
+          <li class="normal" id="section-3.1-2.2">
+            <p id="section-3.1-2.2.1">publish contact IPs,<a href="#section-3.1-2.2.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-3.1-2.3">and perform IPsec session initialization (i.e. IKEv2).<a href="#section-3.1-2.3" class="pilcrow">¶</a>
+          <li class="normal" id="section-3.1-2.3">
+            <p id="section-3.1-2.3.1">and perform IPsec session initialization (i.e. IKEv2).<a href="#section-3.1-2.3.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-3.1-3">These functions are achieved in two steps.  First, each participating AS publishes a Signed Object <span>[<a href="#RFC6488" class="cite xref">RFC6488</a>]</span> in its RPKI Repository containing a <code>RISAVAnnouncement</code>.  (This is the only change that RISAV makes in the RPKI.) The ASN.1 form of <code>RISAVAnnouncement</code> is as follows:<a href="#section-3.1-3" class="pilcrow">¶</a></p>
+<p id="section-3.1-3">These functions are achieved in two steps.  First, each participating AS publishes a Signed Object <span>[<a href="#RFC6488" class="cite xref">RFC6488</a>]</span> in its RPKI Repository containing a <code>RISAVAnnouncement</code>. The ASN.1 form of <code>RISAVAnnouncement</code> is as follows:<a href="#section-3.1-3" class="pilcrow">¶</a></p>
 <div class="lang-ASN.1 sourcecode" id="section-3.1-4">
 <pre>
 RPKI-RISAV-2023
@@ -1580,16 +1587,20 @@ END
 </pre><a href="#section-3.1-4" class="pilcrow">¶</a>
 </div>
 <ul class="normal">
-<li class="normal" id="section-3.1-5.1">version: The version number of RISAVAnnouncement here <span class="bcp14">MUST</span> be 0.<a href="#section-3.1-5.1" class="pilcrow">¶</a>
+<li class="normal" id="section-3.1-5.1">
+            <p id="section-3.1-5.1.1">version: The version number of RISAVAnnouncement here <span class="bcp14">MUST</span> be 0.<a href="#section-3.1-5.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-3.1-5.2">asID: The asID field contains the AS number of one Autonomous System that is going to support  RISAV.<a href="#section-3.1-5.2" class="pilcrow">¶</a>
+          <li class="normal" id="section-3.1-5.2">
+            <p id="section-3.1-5.2.1">asID: The asID field contains the AS number of one Autonomous System that is going to support  RISAV.<a href="#section-3.1-5.2.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-3.1-5.3">contactIP: Within the IPAddressFamily structure, addressFamily contains the Address Family Identifier (AFI) of an IP address family. Contact IP of RISAV only supports IPv4 and IPv6 but there could be one more IPv4 or IPv6 address.  Therefore, addressFamily <span class="bcp14">MUST</span> be either 0001 or 0002 while addresses are a list of IP addresses. The inherit attribute <span class="bcp14">MUST</span> be prohibited in IPAddressChoice as there is no need to look into the list of historical contactIPs.<a href="#section-3.1-5.3" class="pilcrow">¶</a>
+          <li class="normal" id="section-3.1-5.3">
+            <p id="section-3.1-5.3.1">contactIP: Within the IPAddressFamily structure, addressFamily contains the Address Family Identifier (AFI) of an IP address family. Contact IP of RISAV only supports IPv4 and IPv6 but there could be one more IPv4 or IPv6 address.  Therefore, addressFamily <span class="bcp14">MUST</span> be either 0001 or 0002 while addresses are a list of IP addresses. The inherit attribute <span class="bcp14">MUST</span> be prohibited in IPAddressChoice as there is no need to look into the list of historical contactIPs.<a href="#section-3.1-5.3.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-3.1-5.4">testing: The "testing" field indicates whether this contact IP is potentially unreliable.  When this field is set to <code>true</code>, other ASes <span class="bcp14">MUST</span> fall back to ordinary operation if IKE negotiation fails.  Otherwise, the contact IP is presumed to be fully reliable, and other ASes <span class="bcp14">SHOULD</span> drop all non-RISAV traffic from this AS if IKE negotiation fails (see <a href="#downgrade" class="auto internal xref">Section 8.1.2</a>). So it has the default value of FALSE.<a href="#section-3.1-5.4" class="pilcrow">¶</a>
+          <li class="normal" id="section-3.1-5.4">
+            <p id="section-3.1-5.4.1">testing: The "testing" field indicates whether this contact IP is potentially unreliable.  When this field is set to <code>true</code>, other ASes <span class="bcp14">MUST</span> fall back to ordinary operation if IKE negotiation fails.  Otherwise, the contact IP is presumed to be fully reliable, and other ASes <span class="bcp14">SHOULD</span> drop all non-RISAV traffic from this AS if IKE negotiation fails (see <a href="#downgrade" class="auto internal xref">Section 8.1.2</a>). So it has the default value of FALSE.<a href="#section-3.1-5.4.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-3.1-6">When a participating AS discovers another participating AS (via its regular sync of the RPKI database), it initiates an IKEv2 handshake between its own contact IP and the other AS's contact IP.  This handshake <span class="bcp14">MUST</span> include an IKE_AUTH exchange that authenticates both ASes with their RPKI ROA certificates.<a href="#section-3.1-6" class="pilcrow">¶</a></p>
+<p id="section-3.1-6">When a participating AS discovers another participating AS (via its general synchronization process of the RPKI database), it initiates an IKEv2 handshake between its own contact IP and the other AS's contact IP.  This handshake <span class="bcp14">MUST</span> include an IKE_AUTH exchange that authenticates both ASes with their RPKI ROA certificates.<a href="#section-3.1-6" class="pilcrow">¶</a></p>
 <p id="section-3.1-7">Once this handshake is complete, each AS <span class="bcp14">MUST</span> activate RISAV on all outgoing packets, and <span class="bcp14">SHOULD</span> drop all non-RISAV traffic from the other AS after a reasonable grace period (e.g. 60 seconds).<a href="#section-3.1-7" class="pilcrow">¶</a></p>
 <p id="section-3.1-8">RISAV participants add one or more <code>RISAVAnnouncement</code>s to the repository of RPKI. The RPKI procedures are otherwise the same as in the traditional RPKI. For more information about RPKI, see <span>[<a href="#RFC6480" class="cite xref">RFC6480</a>]</span>.<a href="#section-3.1-8" class="pilcrow">¶</a></p>
 </section>
@@ -1607,18 +1618,22 @@ END
 <p id="section-3.2.1-1">IKEv2 SAs can be terminated on demand using the Delete payload (<span>[<a href="#RFC7296" class="cite xref">RFC7296</a>], <a href="https://rfc-editor.org/rfc/rfc7296#section-1.4.1" class="relref">Section 1.4.1</a></span>).  In ordinary uses of IKEv2, the SAs exist in inbound-outbound pairs, and deletion of one triggers a response deleting the other.<a href="#section-3.2.1-1" class="pilcrow">¶</a></p>
 <p id="section-3.2.1-2">In RISAV, SAs do not necessarily exist in pairs.  Instead, RISAV's use of IPsec is strictly unidirectional, so deletion does not trigger an explicit response.  Instead, ASes are permitted to delete both inbound and outbound SAs, and deletion of an inbound SA <span class="bcp14">SHOULD</span> cause the other network to retry RISAV negotiation.  If this, or any, RISAV IKEv2 handshake fails with a NO_ADDITIONAL_SAS notification (<span>[<a href="#RFC7296" class="cite xref">RFC7296</a>], <a href="https://rfc-editor.org/rfc/rfc7296#section-1.3" class="relref">Section 1.3</a></span>), the following convention applies:<a href="#section-3.2.1-2" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-3.2.1-3.1">AS $A is said to have signaled a "RISAV shutdown" to $B if it sends NO_ADDITIONAL_SAS on a handshake with no child SAs.<a href="#section-3.2.1-3.1" class="pilcrow">¶</a>
+<li class="normal" id="section-3.2.1-3.1">
+              <p id="section-3.2.1-3.1.1">AS $A is said to have signaled a "RISAV shutdown" to $B if it sends NO_ADDITIONAL_SAS on a handshake with no child SAs.<a href="#section-3.2.1-3.1.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-3.2.1-3.2">
               <p id="section-3.2.1-3.2.1">In response, $B <span class="bcp14">MUST</span> halt all further RISAV negotiation to $A until:<a href="#section-3.2.1-3.2.1" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-3.2.1-3.2.2.1">At least one hour has passed, OR<a href="#section-3.2.1-3.2.2.1" class="pilcrow">¶</a>
+<li class="normal" id="section-3.2.1-3.2.2.1">
+                  <p id="section-3.2.1-3.2.2.1.1">At least one hour has passed, OR<a href="#section-3.2.1-3.2.2.1.1" class="pilcrow">¶</a></p>
 </li>
-                <li class="normal" id="section-3.2.1-3.2.2.2">$A negotiates a new SA from $A to $B.<a href="#section-3.2.1-3.2.2.2" class="pilcrow">¶</a>
+                <li class="normal" id="section-3.2.1-3.2.2.2">
+                  <p id="section-3.2.1-3.2.2.2.1">$A negotiates a new SA from $A to $B.<a href="#section-3.2.1-3.2.2.2.1" class="pilcrow">¶</a></p>
 </li>
               </ul>
 </li>
-            <li class="normal" id="section-3.2.1-3.3">After at most 24 hours, $B <span class="bcp14">SHOULD</span> resume its regular negotiation policy with $A.<a href="#section-3.2.1-3.3" class="pilcrow">¶</a>
+            <li class="normal" id="section-3.2.1-3.3">
+              <p id="section-3.2.1-3.3.1">After at most 24 hours, $B <span class="bcp14">SHOULD</span> resume its regular negotiation policy with $A.<a href="#section-3.2.1-3.3.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
 <p id="section-3.2.1-4">This convention enables participating ASes to shut down RISAV with any other AS, by deleting all SAs and rejecting all new ones.  It also avoids tight retry loops after a shutdown has occurred, but ensures that RISAV is retried at least once a day.<a href="#section-3.2.1-4" class="pilcrow">¶</a></p>
@@ -1631,16 +1646,21 @@ END
           </h4>
 <p id="section-3.2.2-1">To disable RISAV entirely, a participating AS <span class="bcp14">MUST</span> perform the following steps in order:<a href="#section-3.2.2-1" class="pilcrow">¶</a></p>
 <ol start="1" type="1" class="normal type-1" id="section-3.2.2-2">
-<li id="section-3.2.2-2.1">Apply a targeted shutdown (<a href="#targeted-shutdown" class="auto internal xref">Section 3.2.1</a>) to all other networks and delete all existing SAs.
-  - Note that the shutdown procedure can fail if another network's ACS is unreachable.<a href="#section-3.2.2-2.1" class="pilcrow">¶</a>
+<li id="section-3.2.2-2.1">
+              <p id="section-3.2.2-2.1.1">Apply a targeted shutdown (<a href="#targeted-shutdown" class="auto internal xref">Section 3.2.1</a>) to all other networks and delete all existing SAs.
+  - Note that the shutdown procedure can fail if another network's ACS is unreachable.<a href="#section-3.2.2-2.1.1" class="pilcrow">¶</a></p>
 </li>
-            <li id="section-3.2.2-2.2">Stop requiring RISAV authentication of incoming packets.<a href="#section-3.2.2-2.2" class="pilcrow">¶</a>
+            <li id="section-3.2.2-2.2">
+              <p id="section-3.2.2-2.2.1">Stop requiring RISAV authentication of incoming packets.<a href="#section-3.2.2-2.2.1" class="pilcrow">¶</a></p>
 </li>
-            <li id="section-3.2.2-2.3">Remove the <code>RISAVAnnouncement</code> from the RPKI Repository.<a href="#section-3.2.2-2.3" class="pilcrow">¶</a>
+            <li id="section-3.2.2-2.3">
+              <p id="section-3.2.2-2.3.1">Remove the <code>RISAVAnnouncement</code> from the RPKI Repository.<a href="#section-3.2.2-2.3.1" class="pilcrow">¶</a></p>
 </li>
-            <li id="section-3.2.2-2.4">Wait at least 24 hours.<a href="#section-3.2.2-2.4" class="pilcrow">¶</a>
+            <li id="section-3.2.2-2.4">
+              <p id="section-3.2.2-2.4.1">Wait at least 24 hours.<a href="#section-3.2.2-2.4.1" class="pilcrow">¶</a></p>
 </li>
-            <li id="section-3.2.2-2.5">Shut down the contact IP.<a href="#section-3.2.2-2.5" class="pilcrow">¶</a>
+            <li id="section-3.2.2-2.5">
+              <p id="section-3.2.2-2.5.1">Shut down the contact IP.<a href="#section-3.2.2-2.5.1" class="pilcrow">¶</a></p>
 </li>
           </ol>
 <p id="section-3.2.2-3">Conversely, if any AS no longer publishes a <code>RISAVAnnouncement</code>, other ASes <span class="bcp14">MUST</span> immediately stop sending RISAV to that AS, but <span class="bcp14">MUST NOT</span> delete any active Tunnel Mode SAs for at least 24 hours, in order to continue to process encrypted incoming traffic.<a href="#section-3.2.2-3" class="pilcrow">¶</a></p>
@@ -1661,9 +1681,11 @@ END
 <p id="section-3.3-1">In the event of a misconfiguration or loss of state, it is possible that a negotiated SA could become nonfunctional before its expiration time.  For example, if one AS is forced to reset its ACS and ASBRs, it may lose the private keys for all active RISAV SAs.  If RISAV were applied to the IKEv2 traffic used for bootstrapping, the participating ASes would be unable to communicate until these broken SAs expire, likely after multiple hours or days.<a href="#section-3.3-1" class="pilcrow">¶</a></p>
 <p id="section-3.3-2">To ensure that RISAV participants can rapidly recover from this error state, RISAV places control plane traffic in a "green channel" that is exempt from RISAV's protections.  This "channel" is defined by two requirements:<a href="#section-3.3-2" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-3.3-3.1">RISAV senders <span class="bcp14">MUST NOT</span> add RISAV protection to packets to or from any announced contact IP<a href="#section-3.3-3.1" class="pilcrow">¶</a>
+<li class="normal" id="section-3.3-3.1">
+            <p id="section-3.3-3.1.1">RISAV senders <span class="bcp14">MUST NOT</span> add RISAV protection to packets to or from any announced contact IP<a href="#section-3.3-3.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-3.3-3.2">RISAV recipients <span class="bcp14">MUST NOT</span> enforce RISAV validation on packets sent to or from any announced contact IP.<a href="#section-3.3-3.2" class="pilcrow">¶</a>
+          <li class="normal" id="section-3.3-3.2">
+            <p id="section-3.3-3.2.1">RISAV recipients <span class="bcp14">MUST NOT</span> enforce RISAV validation on packets sent to or from any announced contact IP.<a href="#section-3.3-3.2.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 <p id="section-3.3-4">Although the green channel denies RISAV protection to the ACS, the additional mitigations described in <a href="#data-plane" class="auto internal xref">Section 4</a> ensure that the ACS has limited exposure to address-spoofing and DDoS attacks. In addition, the ACS can use the IKEv2 COOKIE (<span><a href="https://rfc-editor.org/rfc/rfc7296#section-2.6" class="relref">Section 2.6</a> of [<a href="#RFC7296" class="cite xref">RFC7296</a>]</span>) and PUZZLE (<span>[<a href="#RFC8019" class="cite xref">RFC8019</a>]</span>) systems to reject attacks based on source address spoofing.<a href="#section-3.3-4" class="pilcrow">¶</a></p>
@@ -1676,7 +1698,7 @@ END
       <h2 id="name-data-plane">
 <a href="#section-4" class="section-number selfRef">4. </a><a href="#name-data-plane" class="section-name selfRef">Data Plane</a>
       </h2>
-<p id="section-4-1">All the ASBRs of the AS are <span class="bcp14">REQUIRED</span> to enable RISAV. The destination ASBR uses the IPsec SPI to locate the correct SA.<a href="#section-4-1" class="pilcrow">¶</a></p>
+<p id="section-4-1">All the ASBRs of the AS are <span class="bcp14">REQUIRED</span> to enable RISAV.  The destination ASBR uses the IPsec SPI, destination address, and source address to locate the correct SA.<a href="#section-4-1" class="pilcrow">¶</a></p>
 <p id="section-4-2">As defined in <span>[<a href="#RFC4301" class="cite xref">RFC4301</a>]</span>, the Security Association Database (SAD) stores all the SAs. Each data item in the SAD includes a cryptographic algorithm (e.g. HMAC-SHA-256), its corresponding key, and other relevant parameters.<a href="#section-4-2" class="pilcrow">¶</a></p>
 <p id="section-4-3">When an outgoing packet arrives at the source ASBR, its treatment depends on the source and destination address. If the source address belongs to the AS in which the ASBR is located, and the destination address is in an AS for which the ASBR has an active RISAV SA, then the packet needs to be modified for RISAV.<a href="#section-4-3" class="pilcrow">¶</a></p>
 <p id="section-4-4">The modification that is applied depends on whether IPsec "transport mode" or "tunnel mode" is active.  RISAV implementations <span class="bcp14">MUST</span> support transport mode, and <span class="bcp14">MAY</span> support tunnel mode.  The initiator chooses the mode by including or omitting the USE_TRANSPORT_MODE notification in the IKEv2 handshake, retrying in the other configuration if necessary.<a href="#section-4-4" class="pilcrow">¶</a></p>
@@ -1713,14 +1735,16 @@ END
 </div>
 <p id="section-4.1-3">The "Scope" field identifies the scope of protection for this authentication header, i.e. the entities that are expected to produce and consume it.  Two Scope values are defined:<a href="#section-4.1-3" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-4.1-4.1">0: IP.  This is the pre-existing use of the Authentication Header, to authenticate packets from the source IP to the destination IP.<a href="#section-4.1-4.1" class="pilcrow">¶</a>
+<li class="normal" id="section-4.1-4.1">
+            <p id="section-4.1-4.1.1">0: IP.  This is the pre-existing use of the Authentication Header, to authenticate packets from the source IP to the destination IP.<a href="#section-4.1-4.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-4.1-4.2">1: AS.  This header authenticates the packet from the source AS to the destination AS.<a href="#section-4.1-4.2" class="pilcrow">¶</a>
+          <li class="normal" id="section-4.1-4.2">
+            <p id="section-4.1-4.2.1">1: AS.  This header authenticates the packet from the source AS to the destination AS.<a href="#section-4.1-4.2.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 <p id="section-4.1-5">Other Scope values could be defined in the future.<a href="#section-4.1-5" class="pilcrow">¶</a></p>
 <p id="section-4.1-6">The AS-scoped AH headers are only for AS-to-AS communication.  Sending ASes <span class="bcp14">MUST NOT</span> add such headers unless the receiving AS has explicitly opted to receive them.  Receiving ASes <span class="bcp14">MUST</span> strip off all such headers for packets whose destination is inside the AS, even if the AS is not currently inspecting the ICV values.<a href="#section-4.1-6" class="pilcrow">¶</a></p>
-<p id="section-4.1-7">Transport mode normally imposes a space overhead of 32 octets.<a href="#section-4.1-7" class="pilcrow">¶</a></p>
+<p id="section-4.1-7">Transport mode normally imposes a space overhead of 32 octets, no more than general IPsec AH.<a href="#section-4.1-7" class="pilcrow">¶</a></p>
 <div id="icmp-rewriting">
 <section id="section-4.1.1">
           <h4 id="name-icmp-rewriting">
@@ -1729,18 +1753,23 @@ END
 <p id="section-4.1.1-1">There are several situations in which an intermediate router on the path may generate an ICMP response to a packet, such as a Packet Too Big (PTB) response for Path MTU Discovery, or a Time Exceeded message for Traceroute.  These ICMP responses generally echo a portion of the original packet in their payload.<a href="#section-4.1.1-1" class="pilcrow">¶</a></p>
 <p id="section-4.1.1-2">An ASBR considers an ICMP payload to match a Transport Mode RISAV SA if:<a href="#section-4.1.1-2" class="pilcrow">¶</a></p>
 <ol start="1" type="1" class="normal type-1" id="section-4.1.1-3">
-<li id="section-4.1.1-3.1">The payload's source address is in this AS, AND<a href="#section-4.1.1-3.1" class="pilcrow">¶</a>
+<li id="section-4.1.1-3.1">
+              <p id="section-4.1.1-3.1.1">The payload's source address is in this AS, AND<a href="#section-4.1.1-3.1.1" class="pilcrow">¶</a></p>
 </li>
-            <li id="section-4.1.1-3.2">The payload's destination address is in the other AS, AND<a href="#section-4.1.1-3.2" class="pilcrow">¶</a>
+            <li id="section-4.1.1-3.2">
+              <p id="section-4.1.1-3.2.1">The payload's destination address is in the other AS, AND<a href="#section-4.1.1-3.2.1" class="pilcrow">¶</a></p>
 </li>
-            <li id="section-4.1.1-3.3">The payload contains a RISAV AH header whose SPI matches the SA's.<a href="#section-4.1.1-3.3" class="pilcrow">¶</a>
+            <li id="section-4.1.1-3.3">
+              <p id="section-4.1.1-3.3.1">The payload contains a RISAV AH header whose SPI matches the SA's.<a href="#section-4.1.1-3.3.1" class="pilcrow">¶</a></p>
 </li>
           </ol>
 <p id="section-4.1.1-4">When an ASBR observes a matching ICMP response, it <span class="bcp14">MUST</span> forward it to the intended recipient, with the following modifications:<a href="#section-4.1.1-4" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-4.1.1-5.1">The ASBR <span class="bcp14">MUST</span> remove the RISAV AH header from the payload, so that the echoed payload data matches the packet sent by the original sender.<a href="#section-4.1.1-5.1" class="pilcrow">¶</a>
+<li class="normal" id="section-4.1.1-5.1">
+              <p id="section-4.1.1-5.1.1">The ASBR <span class="bcp14">MUST</span> remove the RISAV AH header from the payload, so that the echoed payload data matches the packet sent by the original sender.<a href="#section-4.1.1-5.1.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-4.1.1-5.2">When processing a Packet Too Big message, the ASBR <span class="bcp14">MUST</span> reduce the indicated <code>MTU</code> value by the total length of the RISAV AH header.<a href="#section-4.1.1-5.2" class="pilcrow">¶</a>
+            <li class="normal" id="section-4.1.1-5.2">
+              <p id="section-4.1.1-5.2.1">When processing a Packet Too Big message, the ASBR <span class="bcp14">MUST</span> reduce the indicated <code>MTU</code> value by the total length of the RISAV AH header.<a href="#section-4.1.1-5.2.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
 <p id="section-4.1.1-6">These changes ensure that RISAV remains transparent to the endpoints, similar to the ICMP rewriting required for Network Address Translation <span>[<a href="#RFC5508" class="cite xref">RFC5508</a>]</span> (though much simpler).<a href="#section-4.1.1-6" class="pilcrow">¶</a></p>
@@ -1753,8 +1782,10 @@ END
         <h3 id="name-tunnel-mode">
 <a href="#section-4.2" class="section-number selfRef">4.2. </a><a href="#name-tunnel-mode" class="section-name selfRef">Tunnel Mode</a>
         </h3>
-<p id="section-4.2-1">In tunnel mode, a RISAV sender ASBR wraps each outgoing packet in an ESP payload (<span>[<a href="#RFC4303" class="cite xref">RFC4303</a>]</span>) and sends it as directed by the corresponding SA.  This may require the ASBR to set the Contact IP as the source address, even if it would not otherwise send packets from that address.  (See also "Anycast", <a href="#reliability" class="auto internal xref">Section 9.1</a>).<a href="#section-4.2-1" class="pilcrow">¶</a></p>
-<p id="section-4.2-2">Tunnel mode imposes a space overhead of 73 octets in IPv6.<a href="#section-4.2-2" class="pilcrow">¶</a></p>
+<p id="section-4.2-1">As RISAV does not require encryption for packet, so it uses ESP-NULL to authenticate the packet in tunnel mode.<a href="#section-4.2-1" class="pilcrow">¶</a></p>
+<p id="section-4.2-2">Traditionally, the ESP ICV is computed on the entire ESP packet, excluding the Authentication Data field. Here, in RISAV, the ESP ICV <span class="bcp14">SHOULD</span> be calculated including the IP Source Address at first, following by SPI, Sequence Number, Payload Data, Padding (if present), Pad Length, and Next Header. Destination Address is ignored.<a href="#section-4.2-2" class="pilcrow">¶</a></p>
+<p id="section-4.2-3">In tunnel mode, a RISAV sender ASBR wraps each outgoing packet in an ESP payload (<span>[<a href="#RFC4303" class="cite xref">RFC4303</a>]</span>) and sends it as directed by the corresponding SA.  This may require the ASBR to set the Contact IP as the source address, even if it would not otherwise send packets from that address.  (See also "Anycast", <a href="#reliability" class="auto internal xref">Section 9.1</a>).<a href="#section-4.2-3" class="pilcrow">¶</a></p>
+<p id="section-4.2-4">Tunnel mode imposes a space overhead of 73 octets in IPv6.<a href="#section-4.2-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -1768,10 +1799,10 @@ END
 <p id="section-5-2">There are two ways for a participating AS to compute the inner MTU:<a href="#section-5-2" class="pilcrow">¶</a></p>
 <ol start="1" type="1" class="normal type-1" id="section-5-3">
 <li id="section-5-3.1">
-          <strong>Prior knowledge of the outer MTU</strong>.  If a participating AS knows the minimum outer MTU on all active routes to another AS (e.g., from the terms of a transit or peering agreement), it <span class="bcp14">SHOULD</span> use this information to calculate the inner MTU of a RISAV SA with that AS.<a href="#section-5-3.1" class="pilcrow">¶</a>
+          <p id="section-5-3.1.1"><strong>Prior knowledge of the outer MTU</strong>.  If a participating AS knows the minimum outer MTU on all active routes to another AS (e.g., from the terms of a transit or peering agreement), it <span class="bcp14">SHOULD</span> use this information to calculate the inner MTU of a RISAV SA with that AS.<a href="#section-5-3.1.1" class="pilcrow">¶</a></p>
 </li>
         <li id="section-5-3.2">
-          <strong>Estimation of the outer MTU</strong>.  If the outer MTU is not known in advance, the participating ASes <span class="bcp14">MUST</span> estimate and continuously monitor the MTU, disabling the SA if the inner MTU falls below the minimum acceptable value.  An acceptable MTU estimation procedure is described in <a href="#mtu-estimation" class="auto internal xref">Section 5.2</a>.<a href="#section-5-3.2" class="pilcrow">¶</a>
+          <p id="section-5-3.2.1"><strong>Estimation of the outer MTU</strong>.  If the outer MTU is not known in advance, the participating ASes <span class="bcp14">MUST</span> estimate and continuously monitor the MTU, disabling the SA if the inner MTU falls below the minimum acceptable value.  An acceptable MTU estimation procedure is described in <a href="#mtu-estimation" class="auto internal xref">Section 5.2</a>.<a href="#section-5-3.2.1" class="pilcrow">¶</a></p>
 </li>
       </ol>
 <p id="section-5-4">If the minimum acceptable inner MTU is close or equal to a common outer MTU value (e.g., 1500 octets), RISAV will not be usable in its baseline configuration.  To enable larger inner MTUs, participating ASes <span class="bcp14">MAY</span> offer support for AGGFRAG <span>[<a href="#RFC9347" class="cite xref">RFC9347</a>]</span> in the IKEv2 handshake if they are able to deploy it (see <a href="#ts-replay" class="auto internal xref">Section 6</a>).<a href="#section-5-4" class="pilcrow">¶</a></p>
@@ -1806,24 +1837,32 @@ END
           </h4>
 <p id="section-5.2.2-1">The initial MTU estimate may not be correct indefinitely:<a href="#section-5.2.2-1" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-5.2.2-2.1">The Path MTU may change due to a configuration change in either participating AS.<a href="#section-5.2.2-2.1" class="pilcrow">¶</a>
+<li class="normal" id="section-5.2.2-2.1">
+              <p id="section-5.2.2-2.1.1">The Path MTU may change due to a configuration change in either participating AS.<a href="#section-5.2.2-2.1.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-5.2.2-2.2">The Path MTU may change due to a routing change outside of either AS.<a href="#section-5.2.2-2.2" class="pilcrow">¶</a>
+            <li class="normal" id="section-5.2.2-2.2">
+              <p id="section-5.2.2-2.2.1">The Path MTU may change due to a routing change outside of either AS.<a href="#section-5.2.2-2.2.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-5.2.2-2.3">The Path MTU may be different for packets to or from different portions of the participating ASes.<a href="#section-5.2.2-2.3" class="pilcrow">¶</a>
+            <li class="normal" id="section-5.2.2-2.3">
+              <p id="section-5.2.2-2.3.1">The Path MTU may be different for packets to or from different portions of the participating ASes.<a href="#section-5.2.2-2.3.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
 <p id="section-5.2.2-3">To ensure that the MTU estimate remains acceptable, and allow for different MTUs across different paths, each ASBR maintains an MTU estimate for each active SA, and updates its MTU estimate whenever it observes a PTB message.  The ASBR's procedure is as follows:<a href="#section-5.2.2-3" class="pilcrow">¶</a></p>
 <ol start="1" type="1" class="normal type-1" id="section-5.2.2-4">
-<li id="section-5.2.2-4.1">Find the matching SA ({icmp-rewriting}) for this PTB message.  If there is none, abort.<a href="#section-5.2.2-4.1" class="pilcrow">¶</a>
+<li id="section-5.2.2-4.1">
+              <p id="section-5.2.2-4.1.1">Find the matching SA ({icmp-rewriting}) for this PTB message.  If there is none, abort.<a href="#section-5.2.2-4.1.1" class="pilcrow">¶</a></p>
 </li>
-            <li id="section-5.2.2-4.2">Check the SA's current estimated outer MTU against the PTB MTU.  If the current estimate is smaller or equal, abort.<a href="#section-5.2.2-4.2" class="pilcrow">¶</a>
+            <li id="section-5.2.2-4.2">
+              <p id="section-5.2.2-4.2.1">Check the SA's current estimated outer MTU against the PTB MTU.  If the current estimate is smaller or equal, abort.<a href="#section-5.2.2-4.2.1" class="pilcrow">¶</a></p>
 </li>
-            <li id="section-5.2.2-4.3">Perform an outward Traceroute to the PTB payload's destination IP, using packets whose size is the current outer MTU estimate, stopping at the first IP that is equal to the PTB message's sender IP or is inside the destination AS.<a href="#section-5.2.2-4.3" class="pilcrow">¶</a>
+            <li id="section-5.2.2-4.3">
+              <p id="section-5.2.2-4.3.1">Perform an outward Traceroute to the PTB payload's destination IP, using packets whose size is the current outer MTU estimate, stopping at the first IP that is equal to the PTB message's sender IP or is inside the destination AS.<a href="#section-5.2.2-4.3.1" class="pilcrow">¶</a></p>
 </li>
-            <li id="section-5.2.2-4.4">If a PTB message is received, reduce the current MTU estimate accordingly.<a href="#section-5.2.2-4.4" class="pilcrow">¶</a>
+            <li id="section-5.2.2-4.4">
+              <p id="section-5.2.2-4.4.1">If a PTB message is received, reduce the current MTU estimate accordingly.<a href="#section-5.2.2-4.4.1" class="pilcrow">¶</a></p>
 </li>
-            <li id="section-5.2.2-4.5">If the new estimated inner MTU is below the AS's minimum acceptable MTU, notify the ACS to tear down this SA.<a href="#section-5.2.2-4.5" class="pilcrow">¶</a>
+            <li id="section-5.2.2-4.5">
+              <p id="section-5.2.2-4.5.1">If the new estimated inner MTU is below the AS's minimum acceptable MTU, notify the ACS to tear down this SA.<a href="#section-5.2.2-4.5.1" class="pilcrow">¶</a></p>
 </li>
           </ol>
 <p id="section-5.2.2-5">Note that the PTB MTU value is not used, because it could have been forged by an off-path attacker.  To preclude such attacks, all Traceroute and PMTUD probe packets contain at least 16 bytes of entropy, which the ASBR checks in the echoed payload.<a href="#section-5.2.2-5" class="pilcrow">¶</a></p>
@@ -1903,9 +1942,11 @@ END
         </h3>
 <p id="section-7.2-1">Each IKEv2 handshake negotiates a fixed shared secret, known to both parties. In some cases, it might be desirable to rotate the shared secret frequently:<a href="#section-7.2-1" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-7.2-2.1">In transport mode, frequent rotation would limit how long a single packet can be replayed by a spoofing attacker.<a href="#section-7.2-2.1" class="pilcrow">¶</a>
+<li class="normal" id="section-7.2-2.1">
+            <p id="section-7.2-2.1.1">In transport mode, frequent rotation would limit how long a single packet can be replayed by a spoofing attacker.<a href="#section-7.2-2.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-7.2-2.2">If the ASBRs are less secure than the ACS, frequent rotation could limit the impact of a compromised ASBR.<a href="#section-7.2-2.2" class="pilcrow">¶</a>
+          <li class="normal" id="section-7.2-2.2">
+            <p id="section-7.2-2.2.1">If the ASBRs are less secure than the ACS, frequent rotation could limit the impact of a compromised ASBR.<a href="#section-7.2-2.2.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 <p id="section-7.2-3">However, increasing the frequency of IKEv2 handshakes would increase the burden on the ACS. One alternative possibility is to use a state machine. The state machine runs and triggers the state transition when time is up. The tag is generated in the process of state transition as the side product. The two ACS in peer AS respectively before data transmission will maintain one state machine pair for each bound. The state machine runs simultaneously after the initial state, state transition algorithm, and state transition interval are negotiated, thus they generate the same tag at the same time. Time triggers state transition which means the ACS <span class="bcp14">MUST</span> synchronize the time to the same time base using like NTP defined in <span>[<a href="#RFC5905" class="cite xref">RFC5905</a>]</span>.<a href="#section-7.2-3" class="pilcrow">¶</a></p>
@@ -2000,10 +2041,10 @@ END
 <p id="section-9.1-1">The ACS, represented by a contact IP, must be a high-availability, high-performance service to avoid outages.  There are various strategies to achieve this, including:<a href="#section-9.1-1" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-9.1-2.1">
-            <strong>Election</strong>. This might be achieved by electing one distinguished ASBR as the ACS. The distinguished ASBR acting as an ACS will represent the whole AS to communicate with peer AS's ACS. This election takes place prior to the IKE negotiation. In this arrangement, an ASBR <span class="bcp14">MUST</span> be a BGP speaker before it is elected as the distinguished ASBR, and a new election <span class="bcp14">MUST</span> replace the ACS if it fails.<a href="#section-9.1-2.1" class="pilcrow">¶</a>
+            <p id="section-9.1-2.1.1"><strong>Election</strong>. This might be achieved by electing one distinguished ASBR as the ACS. The distinguished ASBR acting as an ACS will represent the whole AS to communicate with peer AS's ACS. This election takes place prior to the IKE negotiation. In this arrangement, an ASBR <span class="bcp14">MUST</span> be a BGP speaker before it is elected as the distinguished ASBR, and a new election <span class="bcp14">MUST</span> replace the ACS if it fails.<a href="#section-9.1-2.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.1-2.2">
-            <strong>Anycast</strong>.  The ACS could be implemented as an anycast service operated by all the ASBRs.  Route flapping can be mitigated using IKEv2 redirection (<span>[<a href="#RFC5685" class="cite xref">RFC5685</a>], <a href="https://rfc-editor.org/rfc/rfc5685#section-4" class="relref">Section 4</a></span>).  Negotiated SAs must be written into a database that is replicated across all ASBRs.<a href="#section-9.1-2.2" class="pilcrow">¶</a>
+            <p id="section-9.1-2.2.1"><strong>Anycast</strong>.  The ACS could be implemented as an anycast service operated by all the ASBRs.  Route flapping can be mitigated using IKEv2 redirection (<span>[<a href="#RFC5685" class="cite xref">RFC5685</a>], <a href="https://rfc-editor.org/rfc/rfc5685#section-4" class="relref">Section 4</a></span>).  Negotiated SAs must be written into a database that is replicated across all ASBRs.<a href="#section-9.1-2.2.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>
@@ -2191,6 +2232,7 @@ Extension  RPKI Object                      Reference
       <h2 id="name-references">
 <a href="#section-12" class="section-number selfRef">12. </a><a href="#name-references" class="section-name selfRef">References</a>
       </h2>
+<div id="sec-normative-references">
 <section id="section-12.1">
         <h3 id="name-normative-references">
 <a href="#section-12.1" class="section-number selfRef">12.1. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
@@ -2199,6 +2241,10 @@ Extension  RPKI Object                      Reference
 <dt id="RFC2119">[RFC2119]</dt>
         <dd>
 <span class="refAuthor">Bradner, S.</span>, <span class="refTitle">"Key words for use in RFCs to Indicate Requirement Levels"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 2119</span>, <span class="seriesInfo">DOI 10.17487/RFC2119</span>, <time datetime="1997-03" class="refDate">March 1997</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc2119">https://www.rfc-editor.org/info/rfc2119</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC2410">[RFC2410]</dt>
+        <dd>
+<span class="refAuthor">Glenn, R.</span> and <span class="refAuthor">S. Kent</span>, <span class="refTitle">"The NULL Encryption Algorithm and Its Use With IPsec"</span>, <span class="seriesInfo">RFC 2410</span>, <span class="seriesInfo">DOI 10.17487/RFC2410</span>, <time datetime="1998-11" class="refDate">November 1998</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc2410">https://www.rfc-editor.org/info/rfc2410</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC2827">[RFC2827]</dt>
         <dd>
@@ -2278,6 +2324,8 @@ Extension  RPKI Object                      Reference
 <dd class="break"></dd>
 </dl>
 </section>
+</div>
+<div id="sec-informative-references">
 <section id="section-12.2">
         <h3 id="name-informative-references">
 <a href="#section-12.2" class="section-number selfRef">12.2. </a><a href="#name-informative-references" class="section-name selfRef">Informative References</a>
@@ -2301,7 +2349,7 @@ Extension  RPKI Object                      Reference
 <dd class="break"></dd>
 <dt id="I-D.ietf-ipsecme-multi-sa-performance">[I-D.ietf-ipsecme-multi-sa-performance]</dt>
         <dd>
-<span class="refAuthor">Antony, A.</span>, <span class="refAuthor">Brunner, T.</span>, <span class="refAuthor">Klassert, S.</span>, and <span class="refAuthor">P. Wouters</span>, <span class="refTitle">"IKEv2 support for per-queue Child SAs"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-ipsecme-multi-sa-performance-01</span>, <time datetime="2023-06-06" class="refDate">6 June 2023</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-ipsecme-multi-sa-performance-01">https://datatracker.ietf.org/doc/html/draft-ietf-ipsecme-multi-sa-performance-01</a>&gt;</span>. </dd>
+<span class="refAuthor">Antony, A.</span>, <span class="refAuthor">Brunner, T.</span>, <span class="refAuthor">Klassert, S.</span>, and <span class="refAuthor">P. Wouters</span>, <span class="refTitle">"IKEv2 support for per-resource Child SAs"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-ipsecme-multi-sa-performance-02</span>, <time datetime="2023-10-22" class="refDate">22 October 2023</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-ipsecme-multi-sa-performance-02">https://datatracker.ietf.org/doc/html/draft-ietf-ipsecme-multi-sa-performance-02</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC5685">[RFC5685]</dt>
         <dd>
@@ -2309,11 +2357,11 @@ Extension  RPKI Object                      Reference
 <dd class="break"></dd>
 <dt id="I-D.ponchon-ipsecme-anti-replay-subspaces">[I-D.ponchon-ipsecme-anti-replay-subspaces]</dt>
         <dd>
-<span class="refAuthor">Ponchon, P.</span>, <span class="refAuthor">Shaikh, M.</span>, <span class="refAuthor">Pfister, P.</span>, and <span class="refAuthor">G. Solignac</span>, <span class="refTitle">"IPsec and IKE anti-replay sequence number subspaces for traffic-engineered paths and multi-core processing"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ponchon-ipsecme-anti-replay-subspaces-01</span>, <time datetime="2023-03-13" class="refDate">13 March 2023</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ponchon-ipsecme-anti-replay-subspaces-01">https://datatracker.ietf.org/doc/html/draft-ponchon-ipsecme-anti-replay-subspaces-01</a>&gt;</span>. </dd>
+<span class="refAuthor">Ponchon, P.</span>, <span class="refAuthor">Shaikh, M.</span>, <span class="refAuthor">Dernaika, H.</span>, <span class="refAuthor">Pfister, P.</span>, and <span class="refAuthor">G. Solignac</span>, <span class="refTitle">"IPsec and IKE anti-replay sequence number subspaces for traffic-engineered paths and multi-core processing"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ponchon-ipsecme-anti-replay-subspaces-03</span>, <time datetime="2023-10-23" class="refDate">23 October 2023</time>, <span>&lt;<a href="https://datatracker.ietf.org/api/v1/doc/document/draft-ponchon-ipsecme-anti-replay-subspaces/">https://datatracker.ietf.org/api/v1/doc/document/draft-ponchon-ipsecme-anti-replay-subspaces/</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="I-D.mrossberg-ipsecme-multiple-sequence-counters">[I-D.mrossberg-ipsecme-multiple-sequence-counters]</dt>
         <dd>
-<span class="refAuthor">Rossberg, M.</span>, <span class="refAuthor">Klassert, S.</span>, and <span class="refAuthor">M. Pfeiffer</span>, <span class="refTitle">"Problem statements and uses cases for lightweight Child Security Associations"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-mrossberg-ipsecme-multiple-sequence-counters-00</span>, <time datetime="2023-02-27" class="refDate">27 February 2023</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-mrossberg-ipsecme-multiple-sequence-counters-00">https://datatracker.ietf.org/doc/html/draft-mrossberg-ipsecme-multiple-sequence-counters-00</a>&gt;</span>. </dd>
+<span class="refAuthor">Rossberg, M.</span>, <span class="refAuthor">Klassert, S.</span>, and <span class="refAuthor">M. Pfeiffer</span>, <span class="refTitle">"Broadening the Scope of Encapsulating Security Payload (ESP) Protocol"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-mrossberg-ipsecme-multiple-sequence-counters-01</span>, <time datetime="2023-08-15" class="refDate">15 August 2023</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-mrossberg-ipsecme-multiple-sequence-counters-01">https://datatracker.ietf.org/doc/html/draft-mrossberg-ipsecme-multiple-sequence-counters-01</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC8200">[RFC8200]</dt>
         <dd>
@@ -2325,6 +2373,7 @@ Extension  RPKI Object                      Reference
 <dd class="break"></dd>
 </dl>
 </section>
+</div>
 </section>
 <div id="appendix-a">
 <section id="appendix-A">

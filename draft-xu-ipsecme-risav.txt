@@ -6,12 +6,12 @@ ipsecme                                                            K. Xu
 Internet-Draft                                                     J. Wu
 Updates: 4302 (if approved)                          Tsinghua University
 Intended status: Standards Track                                  Y. Guo
-Expires: 4 January 2024                          Zhongguancun Laboratory
+Expires: 25 April 2024                           Zhongguancun Laboratory
                                                           B. M. Schwartz
                                                     Meta Platforms, Inc.
                                                         H. (Henry). Wang
                                    The University of Minnesota at Duluth
-                                                             3 July 2023
+                                                         23 October 2023
 
 
 An RPKI and IPsec-based AS-to-AS Approach for Source Address Validation
@@ -50,7 +50,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 4 January 2024.
+   This Internet-Draft will expire on 25 April 2024.
 
 Copyright Notice
 
@@ -74,6 +74,9 @@ Table of Contents
    2.  Overview
      2.1.  What RISAV Is and Is Not
      2.2.  How RISAV Works
+       2.2.1.  Procedure in RPKI
+       2.2.2.  Procedure of ACS
+       2.2.3.  Procedure of Traffic Forwarding
    3.  Control Plane
      3.1.  Enabling RISAV
      3.2.  Disabling RISAV
@@ -202,108 +205,114 @@ Table of Contents
 
    RISAV is a cryptographically-based inter-AS source address validation
    protocol that provides clear security benefits even at partial
-   deployment.  It aims to prove that each IP datagram was sent from
-   inside the AS that owns its source address, defeating spoofing and
-   replay attacks.  It is lightweight and efficient and provides
-   incremental deployment incentives.
+   deployment.  It is lightweight and efficient and provides incremental
+   deployment incentives.
 
-   At the source AS Border Router, RISAV adds a MAC (Message
-   Authentication Code) to each packet that proves ownership of the
-   packet's source address.  At the recipient's ASBR, RISAV verifies and
-   removes this MAC, recovering the unmodified original packet.  The MAC
-   is delivered in the Integrity Check Value (ICV) field of a modified
-   IPsec AH or as part of the normal IPsec ESP payload.
+   RISAV adds IP packet header authentication to IPsec.  It aims to
+   prove that each IP datagram was sent from inside the AS that owns its
+   source address, defeating spoofing and replay attacks.  It supports,
+   but does not require, encryption of the whole IP packet.
 
-   RISAV supports, but does not require, encryption of the whole packet.
-   It also does not aim to defend against specific network attacks such
-   as DoS or DDoS, though RISAV could do more help to avert them.
+   RISAV does not aim to defend against specific network attacks such as
+   DoS or DDoS, though RISAV could do more help to avert them.
 
 2.2.  How RISAV Works
 
-   RPKI [RFC6480] is a prerequisite for RISAV.  RISAV uses RPKI to bind
-   the AS number and IP prefix.  The binding relationship is equivalent
-   to a ROA [RFC6482].
-
-   RISAV uses IKEv2 to negotiate an IPsec security association (SA)
-   between any two ASes.  RPKI provides the binding relationship between
-   AS numbers, IP ranges, contact IPs, and public keys.  After
-   negotiation, all packets between these ASes are secured by the use of
-   a modified AH header or a standard ESP payload.
-
-   Before deploying RISAV, each AS selects one or more representative
-   contact IPs and publishes them in the RPKI database.  When
-   negotiating or consulting with one AS, the peer MUST first
-   communicate with one of these contact IPs.  Each contact IP is used
-   to enable RISAV only for its own address family (i.e.  IPv4 or IPv6),
-   so ASes wishing to offer RISAV on both IPv4 and IPv6 must publish at
-   least two contact IPs.
-
    A typical workflow of RISAV is shown in Figure 1.
 
-                            +--------------+
-                            |     IANA     |
-                            +--------------+
-                                   |--------------------------+
-                                   V                          |
-                            +--------------+                  |
-                            |      RIR     |                  |
-                            +--------------+                  |
-                           /                \-----------------+-1. Signing CA
-                          V                  V                |  Certificate
-              +--------------+               +--------------+ |
-              |     LIR1     |               |     LIR2     | |
-              +--------------+               +--------------+ |
-              /                                             \-+
-             V                                               V
-+--------------+                                           +--------------+
-| 3. RISAV     |---------+                          +------| 3. RISAV     |
-| Announcement |         | 2. Signing EE Certificate|      | Announcement |
-|              | +-------+                          +----+ |              |
-|     AS A     | |                                       | |     AS B     |
-| contact IP a | V                                       V | contact IP b |
-|           #######   --------------------------------  #######           |
-|           # ACS #    4. SA Negotiation and Delivery   # ACS #           |
-|           #######   --------------------------------  #######           |
-|              |                                           |              |
-|           ########  +++++++++++++++++++++++++++++++++ ########          |
-|           # ASBR #       5. Data Transmission         # ASBR #          |
-|           ########         with IPsec AH/ESP          ########          |
-|              |      +++++++++++++++++++++++++++++++++    |              |
-+--------------+                                           +--------------+
+                            +-------------+
+                            |    IANA     |
+                            +-------------+
+                                   |-------------------------+
+                                   V                         |
+                            +-------------+                  |
+                            |     RIR     |                  |
+                            +-------------+                  |
+                           /               \-----------------+-1. Signing CA
+                          V                 V                |  Certificate
+              +--------------+              +--------------+ |
+              |     LIR1     |              |     LIR2     | |
+              +--------------+              +--------------+ |
+              /                                            \-+
+             V                                              V
++--------------+                                          +--------------+
+| 3. RISAV     |---------+                         +------| 3. RISAV     |
+| Announcement |         |2. Signing EE Certificate|      | Announcement |
+|              | +-------+                         +----+ |              |
+|     AS A     | |                                      | |     AS B     |
+| contact IP a | V                                      V | contact IP b |
+|           #######  --------------------------------  #######           |
+|           # ACS #   4. SA Negotiation and Delivery   # ACS #           |
+|           #######  --------------------------------  #######           |
+|              |                                          |              |
+|           ######## +++++++++++++++++++++++++++++++++ ########          |
+|           # ASBR #      5. Data Transmission         # ASBR #          |
+|           ########        with IPsec AH/ESP          ########          |
+|              |     +++++++++++++++++++++++++++++++++    |              |
++--------------+                                          +--------------+
 
                   Figure 1: RISAV workflow example.
 
-   1.  RPKI process.  The five Regional Internet Registries (RIR),
-       authorized by IANA, use their root certificate to sign the
-       Certificate Authority (CA) certificate of the Local Internet
-       Registry (LIR), which is used to authorize the Autonomous System
-       (AS) (sometimes indirectly via the Internet Service Provider
-       (ISP)).  When they obtain their own CA certificate, the AS would
-       sign an End Entity (EE) certificate with a Route Origin
-       Authorisation (ROA) which is a cryptographically signed object
-       that states which AS is authorized to originate a certain prefix.
-       This authenticated binding of the ASN to its IP prefixes is
-       published in the RPKI database.  This is a prerequisite for
-       RISAV.
+2.2.1.  Procedure in RPKI
 
-   2.  ACS EE certificate provisioning.  The ACS would need its own EE
-       certificate for IKEv2.  This EE certificate is REQUIRED like the
-       BGPsec Router Certificate defined in [RFC8209].
+   RPKI [RFC6480] is a prerequisite for RISAV.
 
-   3.  RISAV announcement.  Each participating AS announces its support
-       for RISAV in the RPKI database, including the IP address of its
-       ACS (the "contact IP").
+   The five Regional Internet Registries (RIR), authorized by IANA, use
+   their root certificate to sign the Certificate Authority (CA)
+   certificate of the Local Internet Registry (LIR), which is used to
+   authorize the Autonomous System (AS) (sometimes indirectly via the
+   Internet Service Provider (ISP)).  When they obtain their own CA
+   certificate, the AS would sign an End Entity (EE) certificate with a
+   Route Origin Authorisation (ROA) which is a cryptographically signed
+   object that states which AS is authorized to originate a certain
+   prefix, descripted in [RFC6482].  This authenticated binding of the
+   ASN to its IP prefixes is published in the RPKI database.
 
-   4.  SA negotiation and delivery.  The ACSes negotiate an SA using
-       IKEv2.  After synchronization, all ASBRs would get the SA,
-       including the session key and other parameters.
+   Beyond ROA, RISAV also REQUIRED RPKI to provide the binding
+   relationship between AS numbers, IP prefixes, contact IPs, and public
+   keys.  This process requires RISAV announcement, which tells other AS
+   that this AS enables RISAV.  Before deploying RISAV, each AS selects
+   one or more representative contact IPs and publishes them in the RPKI
+   database.  When negotiating or consulting with one AS, the peer MUST
+   first communicate with one of these contact IPs.  Each contact IP is
+   used to enable RISAV only for its own address family (i.e.  IPv4 or
+   IPv6), so ASes wishing to offer RISAV on both IPv4 and IPv6 must
+   publish at least two contact IPs.
 
-   5.  IPsec communication.  RISAV uses IPsec AH (i.e. "transport mode")
-       for authentication of the IP source address by default.  When an
-       ASBR in AS A sends a packet to AS B, it uses the established
-       IPsec channel to add the required AH header.  The ASBR in AS B
-       validates the AH header to ensure that the packet was not
-       spoofed, and removes the header.
+2.2.2.  Procedure of ACS
+
+   The entity who occupis the contact IPs are the AS Contact Server
+   (ACS).  The ACS initiates the RISAV announcement.  In practice, each
+   participating AS is REQUIRED to announce its support for RISAV in the
+   RPKI database.
+
+   RISAV uses IKEv2 to negotiate IPsec security associations (SA)
+   between any two ASes.  ACS represents the AS to negotiate IPsec SAs
+   with pair ASes.  The ACS needs its own EE certificate for IKEv2.
+   This EE certificate is REQUIRED like the BGPsec Router Certificate
+   defined in [RFC8209].
+
+   After SAs negotiation and synchronization, all ASBRs would get the
+   SAs from its local AS's ACS, including the session key and other
+   parameters.
+
+2.2.3.  Procedure of Traffic Forwarding
+
+   After SA negotiation and RPKI synchronization, RISAV is established.
+   All packets between these ASes SHOULD be secured by adding a modified
+   AH header or a standard ESP header.
+
+   Basically, at the source AS Border Router, RISAV adds a MAC (Message
+   Authentication Code) to each outgoing packet that proves ownership of
+   the packet's source address.  At the recipient's ASBR, RISAV verifies
+   and removes this MAC from the incoming traffic, recovering the
+   unmodified original packet.  The MAC is located in the Integrity
+   Check Value (ICV) field of a modified IPsec AH or as part of the
+   standard IPsec ESP payload.
+
+   RISAV uses modified IPsec AH for authentication of the IP source
+   address by default.  It uses ESP-NULL encryption when using IPsec
+   ESP.
 
 3.  Control Plane
 
@@ -323,9 +332,8 @@ Table of Contents
 
    These functions are achieved in two steps.  First, each participating
    AS publishes a Signed Object [RFC6488] in its RPKI Repository
-   containing a RISAVAnnouncement.  (This is the only change that RISAV
-   makes in the RPKI.)  The ASN.1 form of RISAVAnnouncement is as
-   follows:
+   containing a RISAVAnnouncement.  The ASN.1 form of RISAVAnnouncement
+   is as follows:
 
    RPKI-RISAV-2023
      { iso(1) member-body(2) us(840) rsadsi(113549) pkcs(1)
@@ -384,10 +392,10 @@ Table of Contents
       the default value of FALSE.
 
    When a participating AS discovers another participating AS (via its
-   regular sync of the RPKI database), it initiates an IKEv2 handshake
-   between its own contact IP and the other AS's contact IP.  This
-   handshake MUST include an IKE_AUTH exchange that authenticates both
-   ASes with their RPKI ROA certificates.
+   general synchronization process of the RPKI database), it initiates
+   an IKEv2 handshake between its own contact IP and the other AS's
+   contact IP.  This handshake MUST include an IKE_AUTH exchange that
+   authenticates both ASes with their RPKI ROA certificates.
 
    Once this handshake is complete, each AS MUST activate RISAV on all
    outgoing packets, and SHOULD drop all non-RISAV traffic from the
@@ -490,7 +498,8 @@ Table of Contents
 4.  Data Plane
 
    All the ASBRs of the AS are REQUIRED to enable RISAV.  The
-   destination ASBR uses the IPsec SPI to locate the correct SA.
+   destination ASBR uses the IPsec SPI, destination address, and source
+   address to locate the correct SA.
 
    As defined in [RFC4301], the Security Association Database (SAD)
    stores all the SAs.  Each data item in the SAD includes a
@@ -563,7 +572,8 @@ Table of Contents
    such headers for packets whose destination is inside the AS, even if
    the AS is not currently inspecting the ICV values.
 
-   Transport mode normally imposes a space overhead of 32 octets.
+   Transport mode normally imposes a space overhead of 32 octets, no
+   more than general IPsec AH.
 
 4.1.1.  ICMP rewriting
 
@@ -598,6 +608,16 @@ Table of Contents
    Translation [RFC5508] (though much simpler).
 
 4.2.  Tunnel Mode
+
+   As RISAV does not require encryption for packet, so it uses ESP-NULL
+   to authenticate the packet in tunnel mode.
+
+   Traditionally, the ESP ICV is computed on the entire ESP packet,
+   excluding the Authentication Data field.  Here, in RISAV, the ESP ICV
+   SHOULD be calculated including the IP Source Address at first,
+   following by SPI, Sequence Number, Payload Data, Padding (if
+   present), Pad Length, and Next Header.  Destination Address is
+   ignored.
 
    In tunnel mode, a RISAV sender ASBR wraps each outgoing packet in an
    ESP payload ([RFC4303]) and sends it as directed by the corresponding
@@ -1113,6 +1133,10 @@ Table of Contents
               DOI 10.17487/RFC2119, March 1997,
               <https://www.rfc-editor.org/info/rfc2119>.
 
+   [RFC2410]  Glenn, R. and S. Kent, "The NULL Encryption Algorithm and
+              Its Use With IPsec", RFC 2410, DOI 10.17487/RFC2410,
+              November 1998, <https://www.rfc-editor.org/info/rfc2410>.
+
    [RFC2827]  Ferguson, P. and D. Senie, "Network Ingress Filtering:
               Defeating Denial of Service Attacks which employ IP Source
               Address Spoofing", BCP 38, RFC 2827, DOI 10.17487/RFC2827,
@@ -1231,10 +1255,11 @@ Table of Contents
 
    [I-D.ietf-ipsecme-multi-sa-performance]
               Antony, A., Brunner, T., Klassert, S., and P. Wouters,
-              "IKEv2 support for per-queue Child SAs", Work in Progress,
-              Internet-Draft, draft-ietf-ipsecme-multi-sa-performance-
-              01, 6 June 2023, <https://datatracker.ietf.org/doc/html/
-              draft-ietf-ipsecme-multi-sa-performance-01>.
+              "IKEv2 support for per-resource Child SAs", Work in
+              Progress, Internet-Draft, draft-ietf-ipsecme-multi-sa-
+              performance-02, 22 October 2023,
+              <https://datatracker.ietf.org/doc/html/draft-ietf-ipsecme-
+              multi-sa-performance-02>.
 
    [RFC5685]  Devarapalli, V. and K. Weniger, "Redirect Mechanism for
               the Internet Key Exchange Protocol Version 2 (IKEv2)",
@@ -1242,21 +1267,21 @@ Table of Contents
               <https://www.rfc-editor.org/info/rfc5685>.
 
    [I-D.ponchon-ipsecme-anti-replay-subspaces]
-              Ponchon, P., Shaikh, M., Pfister, P., and G. Solignac,
-              "IPsec and IKE anti-replay sequence number subspaces for
-              traffic-engineered paths and multi-core processing", Work
-              in Progress, Internet-Draft, draft-ponchon-ipsecme-anti-
-              replay-subspaces-01, 13 March 2023,
-              <https://datatracker.ietf.org/doc/html/draft-ponchon-
-              ipsecme-anti-replay-subspaces-01>.
+              Ponchon, P., Shaikh, M., Dernaika, H., Pfister, P., and G.
+              Solignac, "IPsec and IKE anti-replay sequence number
+              subspaces for traffic-engineered paths and multi-core
+              processing", Work in Progress, Internet-Draft, draft-
+              ponchon-ipsecme-anti-replay-subspaces-03, 23 October 2023,
+              <https://datatracker.ietf.org/api/v1/doc/document/draft-
+              ponchon-ipsecme-anti-replay-subspaces/>.
 
    [I-D.mrossberg-ipsecme-multiple-sequence-counters]
-              Rossberg, M., Klassert, S., and M. Pfeiffer, "Problem
-              statements and uses cases for lightweight Child Security
-              Associations", Work in Progress, Internet-Draft, draft-
-              mrossberg-ipsecme-multiple-sequence-counters-00, 27
-              February 2023, <https://datatracker.ietf.org/doc/html/
-              draft-mrossberg-ipsecme-multiple-sequence-counters-00>.
+              Rossberg, M., Klassert, S., and M. Pfeiffer, "Broadening
+              the Scope of Encapsulating Security Payload (ESP)
+              Protocol", Work in Progress, Internet-Draft, draft-
+              mrossberg-ipsecme-multiple-sequence-counters-01, 15 August
+              2023, <https://datatracker.ietf.org/doc/html/draft-
+              mrossberg-ipsecme-multiple-sequence-counters-01>.
 
    [RFC8200]  Deering, S. and R. Hinden, "Internet Protocol, Version 6
               (IPv6) Specification", STD 86, RFC 8200,
